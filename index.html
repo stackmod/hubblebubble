@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three-orbitcontrols@2.110.3/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three-effectcomposer@0.0.1/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@roboshoes/shader-pass@0.3.2/index.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set up the scene
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Add a dark space background with stars
+            const spaceTexture = new THREE.TextureLoader().load('dark-space-image.jpg');
+            scene.background = spaceTexture;
+
+            // Create a central star with the company logo
+            const starGeometry = new THREE.SphereGeometry(2, 32, 32);
+            const starMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('logo.png') });
+            const star = new THREE.Mesh(starGeometry, starMaterial);
+            scene.add(star);
+
+            // ... (continue with the rest of the code)
+
+            // Set up the camera position
+            camera.position.z = 20;
+
+            // Add lights for a realistic space feel
+            const ambientLight = new THREE.AmbientLight(0x404040); // Soft ambient light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); // Directional light from one side
+            scene.add(ambientLight, directionalLight);
+
+            // Enable drag to change the revolving direction
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+            // Set up raycaster for clicking on planets
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            // ... (continue with the rest of the code)
+
+            // Add the post-processing blur effect
+            const composer = new THREE.EffectComposer(renderer);
+            const renderPass = new THREE.RenderPass(scene, camera);
+            composer.addPass(renderPass);
+
+            const blurPass = new THREE.ShaderPass(THREE.HorizontalBlurShader);
+            composer.addPass(blurPass);
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                composer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            renderer.setAnimationLoop(() => {
+                // Update animations
+                planets.forEach((planet, index) => {
+                    const angle = Date.now() * 0.0005;
+                    const radius = 10;
+
+                    planet.position.x = Math.cos(angle + (index / planetNames.length) * Math.PI * 2) * radius;
+                    planet.position.z = Math.sin(angle + (index / planetNames.length) * Math.PI * 2) * radius;
+                });
+
+                // Render the scene through the composer
+                composer.render();
+
+                // Update the blur effect
+                blurPass.uniforms.h.value = Math.min(window.innerWidth, window.innerHeight) * 0.02;
+            });
+        });
+    </script>
+</body>
+</html>
