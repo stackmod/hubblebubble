@@ -1,138 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js Animation</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>3D Planetary System</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
+      body {
+        margin: 0;
+      }
     </style>
-</head>
-<body>
-    <div id="container"></div>
-    <script src="https://threejs.org/build/three.min.js"></script>
-    
+  </head>
+  <body>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script src="https://unpkg.com/three@0.112/examples/jsm/controls/OrbitControls.js"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Set up the scene
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+      // Set up the scene, camera, and renderer
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
 
-        // Central sphere (sun)
-        const sunGeometry = new THREE.SphereGeometry(6, 32, 32);
-        const sunTexture = new THREE.TextureLoader().load('logo.png'); // Replace with the path to your image
-        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFF00, map: sunTexture });
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        scene.add(sun);
+      // Create a starfield background
+      const starsGeometry = new THREE.BufferGeometry();
+      const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1 });
 
-        // Variables for the elliptical orbit
-        const numberOfPlanets = 10;
-        const orbitRadiusX = 30; // Width of the ellipse
-        const orbitRadiusZ = 15; // Height of the ellipse
-        const orbitTiltAngle = -0.2; // Downward tilt
-        const orbitingSpheres = [];
+      const starsVertices = [];
+      for (let i = 0; i < 10000; i++) {
+        const x = (Math.random() - 0.5) * 2000;
+        const y = (Math.random() - 0.5) * 2000;
+        const z = (Math.random() - 0.5) * 2000;
+        starsVertices.push(x, y, z);
+      }
 
-        // Create orbiting spheres (planets)
-        for (let i = 0; i < numberOfPlanets; i++) {
-            const planetGeometry = new THREE.SphereGeometry(2, 100, 100);
-            const planetMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
-            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+      starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+      const stars = new THREE.Points(starsGeometry, starsMaterial);
+      scene.add(stars);
 
-            const angle = (2 * Math.PI / numberOfPlanets) * i;
-            planet.position.x = orbitRadiusX * Math.cos(angle);
-            planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
-            planet.position.z = orbitRadiusZ * Math.sin(angle) * Math.cos(orbitTiltAngle);
+      // Create the sun with a textured image
+      const sunTexture = new THREE.TextureLoader().load('2k_venus_surface.jpg');
+      const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
+      const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+      const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+      scene.add(sun);
 
-            scene.add(planet);
-            orbitingSpheres.push(planet);
-        }
+      // Create planets with elliptical orbits
+      const planets = [];
+      const numPlanets = 5;
 
-        // Camera position
-        camera.position.x = 50; // Move to the right
-        camera.position.y = 50; // Move up
-        camera.position.z = -50; // Adjust the depth
+      for (let i = 0; i < numPlanets; i++) {
+        const planetTexture = new THREE.TextureLoader().load(`logo.png`);
+        const planetMaterial = new THREE.MeshBasicMaterial({ map: planetTexture });
+        const planetGeometry = new THREE.SphereGeometry(1, 32, 32);
+        const planet = new THREE.Mesh(planetGeometry, planetMaterial);
 
-        // Make the camera look at the center of the scene
-        camera.lookAt(scene.position);
+        const orbit = new THREE.EllipseCurve(
+          10 + i * 5, // x
+          0, // y
+          10 + i * 5, // radiusX
+          5 + i * 2 // radiusY
+        );
 
-        // Raycaster for mouse/touch interaction
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        let isDragging = false;
-        let previousMousePosition = { x: 0, y: 0 };
+        const points = orbit.getPoints(100);
+        const orbitPath = new THREE.BufferGeometry().setFromPoints(points);
 
-        function updateMousePosition(event) {
-            const x = event.clientX || event.touches[0].clientX;
-            const y = event.clientY || event.touches[0].clientY;
-            mouse.x = (x / window.innerWidth) * 2 - 1;
-            mouse.y = -(y / window.innerHeight) * 2 + 1;
-        }
+        const orbitLine = new THREE.Line(orbitPath, new THREE.LineBasicMaterial({ color: 0xffffff }));
+        scene.add(orbitLine);
 
-        function onMouseDown(event) {
-            isDragging = true;
-            updateMousePosition(event);
-            previousMousePosition = { x: event.clientX, y: event.clientY };
-        }
+        planets.push({ planet, orbitLine });
+        scene.add(planet);
+      }
 
-        function onMouseMove(event) {
-            if (isDragging) {
-                updateMousePosition(event);
+      // Set up camera position and controls
+      camera.position.z = 20;
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-                // Calculate rotation based on mouse movement
-                const deltaX = mouse.x - previousMousePosition.x;
-                const deltaY = mouse.y - previousMousePosition.y;
+      // Animation loop
+      const animate = function () {
+        requestAnimationFrame(animate);
 
-                // Apply rotation to the scene or planets based on deltaX and deltaY
-
-                previousMousePosition = { x: mouse.x, y: mouse.y };
-            }
-        }
-
-        function onMouseUp() {
-            isDragging = false;
-        }
-
-        // Event listeners for mouse
-        document.addEventListener('mousedown', onMouseDown, false);
-        document.addEventListener('mousemove', onMouseMove, false);
-        document.addEventListener('mouseup', onMouseUp, false);
-
-        // Event listeners for touch
-        document.addEventListener('touchstart', onMouseDown, false);
-        document.addEventListener('touchmove', onMouseMove, false);
-        document.addEventListener('touchend', onMouseUp, false);
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Update planet positions and scale for elliptical orbit
-            orbitingSpheres.forEach((planet, index) => {
-                const time = Date.now() * 0.001;
-                const angle = (2 * Math.PI / numberOfPlanets) * index + 0.1 * time;
-
-                planet.position.x = orbitRadiusX * Math.cos(angle);
-                planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
-                planet.position.z = orbitRadiusZ * Math.sin(angle) * Math.cos(orbitTiltAngle);
-
-                // Dynamic scaling based on distance to camera
-                const distance = camera.position.distanceTo(planet.position);
-                const scale = Math.max(2, 2 - Math.abs(distance - camera.position.z) / 20);
-                planet.scale.set(scale, scale, scale);
-            });
-
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-
+        // Rotate the planets around the sun
+        planets.forEach(({ planet, orbitLine }, index) => {
+          const angle = (Date.now() * 0.0001 * (index + 1)) % (Math.PI * 2);
+          const x = orbitLine.geometry.attributes.position.getX(0);
+          const z = orbitLine.geometry.attributes.position.getZ(0);
+          planet.position.set(Math.cos(angle) * x, 0, Math.sin(angle) * z);
         });
+
+        // Rotate the entire planetary system
+        scene.rotation.y += 0.001;
+
+        // Render the scene
+        renderer.render(scene, camera);
+      };
+
+      animate();
     </script>
-</body>
+  </body>
 </html>
