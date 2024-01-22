@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple 3D Planetary System</title>
+    <title>Simpless</title>
 </head>
 <body>
     <script src="https://threejs.org/build/three.min.js"></script>
@@ -31,7 +31,11 @@ const orbitingSpheres = [];
 // Create orbiting spheres (planets)
 for (let i = 0; i < numberOfPlanets; i++) {
     const planetGeometry = new THREE.SphereGeometry(2, 100, 100);
-    const planetMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
+    // const planetMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
+
+    const sunTexture = new THREE.TextureLoader().load(i+'.png'); 
+    const planetMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
+
     const planet = new THREE.Mesh(planetGeometry, planetMaterial);
 
     const angle = (2 * Math.PI / numberOfPlanets) * i;
@@ -66,37 +70,28 @@ function updateMousePosition(event) {
 
 function onMouseDown(event) {
     isDragging = true;
-    updateMousePosition(event);
+    // updateMousePosition(event);
     previousMousePosition = { x: event.clientX, y: event.clientY };
 }
 
-function onMouseMove(event) {
-    if (isDragging) {
-        updateMousePosition(event);
-
-        // Calculate rotation based on mouse movement
-        const deltaX = mouse.x - previousMousePosition.x;
-        const deltaY = mouse.y - previousMousePosition.y;
-
-        // Apply rotation to the scene or planets based on deltaX and deltaY
-
-        previousMousePosition = { x: mouse.x, y: mouse.y };
-    }
-}
 
 function onMouseUp() {
     isDragging = false;
+    rotateClockwise = !rotateClockwise;
 }
 
 // Event listeners for mouse
 document.addEventListener('mousedown', onMouseDown, false);
-document.addEventListener('mousemove', onMouseMove, false);
 document.addEventListener('mouseup', onMouseUp, false);
 
 // Event listeners for touch
 document.addEventListener('touchstart', onMouseDown, false);
-document.addEventListener('touchmove', onMouseMove, false);
 document.addEventListener('touchend', onMouseUp, false);
+
+// Variables for rotating the entire scene
+let sceneRotation = { x: 0, y: 0 };
+
+let rotateClockwise = false;
 
 // Animation loop
 function animate() {
@@ -105,7 +100,10 @@ function animate() {
     // Update planet positions and scale for elliptical orbit
     orbitingSpheres.forEach((planet, index) => {
         const time = Date.now() * 0.001;
-        const angle = (2 * Math.PI / numberOfPlanets) * index + 0.1 * time;
+        if(rotateClockwise)
+        angle = (2 * Math.PI / numberOfPlanets) * index + 0.1 * time;
+        else
+        angle = (2 * Math.PI / numberOfPlanets) * index - 0.1 * time;
 
         planet.position.x = orbitRadiusX * Math.cos(angle);
         planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
