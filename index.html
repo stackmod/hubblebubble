@@ -41,6 +41,7 @@
             planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
             planet.position.z = orbitRadiusZ * Math.sin(angle) * Math.cos(orbitTiltAngle);
 
+            planet.userData.draggable = true; // Flag for draggable planets
             scene.add(planet);
             orbitingSpheres.push(planet);
         }
@@ -57,6 +58,7 @@
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let isDragging = false;
+        let selectedPlanet = null;
         let previousMousePosition = { x: 0, y: 0 };
 
         function updateMousePosition(event) {
@@ -67,24 +69,25 @@
         }
 
         function onMouseDown(event) {
-            isDragging = true;
             updateMousePosition(event);
-            previousMousePosition = { x: event.clientX, y: event.clientY };
+            const intersects = getIntersects(mouse, orbitingSpheres);
+
+            if (intersects.length > 0) {
+                isDragging = true;
+                selectedPlanet = intersects[0].object;
+                previousMousePosition = { x: event.clientX, y: event.clientY };
+            }
         }
 
         function onMouseMove(event) {
-            if (isDragging) {
+            if (isDragging && selectedPlanet) {
                 updateMousePosition(event);
 
-                // Calculate rotation based on mouse movement
                 const deltaX = mouse.x - previousMousePosition.x;
                 const deltaY = mouse.y - previousMousePosition.y;
 
-                // Apply rotation to the planets based on deltaX and deltaY
-                orbitingSpheres.forEach((planet) => {
-                    planet.rotation.y += deltaX * 0.02;
-                    planet.rotation.x += deltaY * 0.02;
-                });
+                selectedPlanet.rotation.y += deltaX * 0.02;
+                selectedPlanet.rotation.x += deltaY * 0.02;
 
                 previousMousePosition = { x: mouse.x, y: mouse.y };
             }
@@ -92,6 +95,7 @@
 
         function onMouseUp() {
             isDragging = false;
+            selectedPlanet = null;
         }
 
         // Event listeners for mouse
@@ -127,6 +131,12 @@
         }
 
         animate();
+
+        // Function to get intersects
+        function getIntersects(mouse, objects) {
+            raycaster.setFromCamera(mouse, camera);
+            return raycaster.intersectObjects(objects.filter(obj => obj.userData.draggable));
+        }
     </script>
 </body>
 </html>
