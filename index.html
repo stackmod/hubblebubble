@@ -61,8 +61,13 @@
         let previousMousePosition = { x: 0, y: 0 };
 
         function updateMousePosition(event) {
-            mouse.x = ((event.clientX || event.touches[0].clientX) / window.innerWidth) * 2 - 1;
-            mouse.y = -((event.clientY || event.touches[0].clientY) / window.innerHeight) * 2 + 1;
+            if (event.changedTouches) {
+                mouse.x = (event.changedTouches[0].clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.changedTouches[0].clientY / window.innerHeight) * 2 + 1;
+            } else {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            }
         }
 
         function onMouseDown(event) {
@@ -79,18 +84,32 @@
         }
 
         function onMouseMove(event) {
+            event.preventDefault(); // Prevent default touch event behavior
+
             if (!isDragging || !selectedPlanet) return;
             updateMousePosition(event);
 
-            const deltaX = event.clientX - previousMousePosition.x;
-            const deltaY = event.clientY - previousMousePosition.y;
+            let deltaX, deltaY;
+            if (event.changedTouches) {
+                deltaX = event.changedTouches[0].clientX - previousMousePosition.x;
+                deltaY = event.changedTouches[0].clientY - previousMousePosition.y;
+            } else {
+                deltaX = event.clientX - previousMousePosition.x;
+                deltaY = event.clientY - previousMousePosition.y;
+            }
 
-            selectedPlanet.userData.rotationVelocity.y += deltaX * 0.0005;
-            selectedPlanet.userData.rotationVelocity.x += deltaY * 0.0005;
+            selectedPlanet.userData.rotationVelocity.y += deltaX * 0.0005; // Adjust sensitivity if needed
+            selectedPlanet.userData.rotationVelocity.x += deltaY * 0.0005; // Adjust sensitivity if needed
 
-            previousMousePosition.x = event.clientX;
-            previousMousePosition.y = event.clientY;
+            if (event.changedTouches) {
+                previousMousePosition.x = event.changedTouches[0].clientX;
+                previousMousePosition.y = event.changedTouches[0].clientY;
+            } else {
+                previousMousePosition.x = event.clientX;
+                previousMousePosition.y = event.clientY;
+            }
         }
+
 
         function onMouseUp() {
             isDragging = false;
