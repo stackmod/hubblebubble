@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Planetary System</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Initialize Scene, Camera, Renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        camera.position.set(0, 20, 100);
+        controls.update();
+
+        // Create Sun
+        const sunTexture = new THREE.TextureLoader().load('sun_texture.jpg'); // Add path to sun texture
+        const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
+
+        // Create Planets
+        const planets = [];
+        const planetTextures = ['planet_texture1.jpg', 'planet_texture2.jpg', 'planet_texture3.jpg']; // Add paths to textures
+
+        planetTextures.forEach(texture => {
+            const planetTexture = new THREE.TextureLoader().load(texture);
+            const planetGeometry = new THREE.SphereGeometry(1, 32, 32);
+            const planetMaterial = new THREE.MeshBasicMaterial({ map: planetTexture });
+            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+            scene.add(planet);
+            planets.push(planet);
+        });
+
+        // Orbital Movement
+        const orbitRadius = [10, 15, 20];
+        let theta = 0;
+
+        function updatePlanets() {
+            theta += 0.01;
+            planets.forEach((planet, index) => {
+                planet.position.x = orbitRadius[index] * Math.sin(theta);
+                planet.position.z = orbitRadius[index] * Math.cos(theta);
+            });
+        }
+
+        // Dynamic Scaling
+        function updateScaling() {
+            planets.forEach((planet) => {
+                const distance = camera.position.distanceTo(planet.position);
+                planet.scale.setScalar(1 + 1 / distance);
+            });
+        }
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            updatePlanets();
+            updateScaling();
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Additional mouse interaction code needed here for click and drag functionality
+    </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Planetary System</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Initialize Scene, Camera, Renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        camera.position.set(0, 0, 100);
+        // controls.update();
+
+        // Function to rotate the camera 25 degrees to the left around the Y axis
+        function rotateCameraLeft(camera, angleInDegrees) {
+            const angleInRadians = THREE.MathUtils.degToRad(angleInDegrees);
+            const quaternion = new THREE.Quaternion();
+            quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 0), -angleInRadians);
+            camera.applyQuaternion(quaternion);
+        }
+
+        // Apply the rotation to the camera
+        rotateCameraLeft(camera, 25);
+
+
+
+
+
+
+        // Create Sun
+        const sunTexture = new THREE.TextureLoader().load('logo.png'); // Add path to sun texture
+        const sunGeometry = new THREE.SphereGeometry(6, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
+
+        // Create Planets
+        const planets = [];
+        const planetTextures = [
+            '1.png', 
+            '2.png', 
+            '3.png',
+            '4.png',
+            '5.png',
+            '6.png',
+            '7.png',
+            '8.png',
+            '9.png',
+            '0.png',
+        ]; // Add paths to textures
+
+        const orbitRadius = 15;
+        const planetSpacing = 2 * Math.PI / planetTextures.length;
+
+        planetTextures.forEach((texture, index) => {
+            const planetTexture = new THREE.TextureLoader().load(texture);
+            const planetGeometry = new THREE.SphereGeometry(3, 32, 32);
+            const planetMaterial = new THREE.MeshBasicMaterial({ map: planetTexture });
+            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+            planet.position.x = orbitRadius * Math.cos(planetSpacing * index);
+            planet.position.z = orbitRadius * Math.sin(planetSpacing * index);
+            scene.add(planet);
+            planets.push(planet);
+        });
+
+        // Orbital Movement
+        let theta = 0.01;
+
+        // Orbital Movement with Tilt
+        const orbitTilt = Math.PI / 2; // Adjust this value for the desired tilt angle
+
+
+        function updatePlanets() {
+            theta += 0.01;
+            planets.forEach((planet, index) => {
+                // Position before tilt
+                let x = orbitRadius * Math.cos(theta + planetSpacing * index);
+                let z = orbitRadius * Math.sin(theta + planetSpacing * index);
+
+                // Apply tilt
+                planet.position.x = x * Math.cos(orbitTilt) - z * Math.sin(orbitTilt);
+                planet.position.z = x * Math.sin(orbitTilt) + z * Math.cos(orbitTilt);
+                planet.position.y = 0; // This can be adjusted if the tilt should result in a change in the y-axis as well
+            });
+        }
+
+        // Dynamic Scaling
+        function updateScaling() {
+            planets.forEach((planet) => {
+                const distance = camera.position.distanceTo(planet.position);
+                planet.scale.setScalar(1 + 1 / distance);
+            });
+        }
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            updatePlanets();
+            updateScaling();
+            // controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Additional mouse interaction code needed here for click and drag functionality
+    </script>
+</body>
+</html>

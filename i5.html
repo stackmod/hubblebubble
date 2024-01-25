@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Planetary System</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, light;
+        const planets = [];
+        const planetTextures = ['0.png', '1.png', '2.png', '3.png', '4.png', '5.png', '6.png', '7.png', '8.png', '9.png'];
+        const planetLinks = ['url0', 'url1', 'url2', 'url3', 'url4', 'url5', 'url6', 'url7', 'url8', 'url9'];
+
+        init();
+        animate();
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 30;
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Sun
+            const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('logo.png') });
+            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            scene.add(sun);
+
+            // Planets
+            for (let i = 0; i < 10; i++) {
+                const planetGeometry = new THREE.SphereGeometry(1, 32, 32);
+                const planetMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(planetTextures[i]) });
+                const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+                planet.position.x = 10 * Math.cos((2 * Math.PI / 10) * i);
+                planet.position.y = 10 * Math.sin((2 * Math.PI / 10) * i);
+                planet.userData = { URL: planetLinks[i] };
+                planets.push(planet);
+                scene.add(planet);
+            }
+
+            // Lighting
+            light = new THREE.PointLight(0xffffff, 1, 100);
+            light.position.set(0, 0, 25);
+            scene.add(light);
+
+            // Optional: OrbitControls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableZoom = false;
+            controls.enablePan = false;
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousedown', onDocumentMouseDown, false);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onDocumentMouseDown(event) {
+            event.preventDefault();
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(planets);
+            if (intersects.length > 0) {
+                window.location.href = intersects[0].object.userData.URL;
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            planets.forEach((planet, index) => {
+                const angle = (Date.now() * 0.001 + index * 0.4) % (2 * Math.PI);
+                planet.position.x = 10 * Math.cos(angle);
+                planet.position.y = 10 * Math.sin(angle);
+                const distance = camera.position.distanceTo(planet.position);
+                planet.scale.setScalar(1 + 1 / distance);
+            });
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>

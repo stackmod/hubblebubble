@@ -4,57 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simpless</title>
+    <script src="https://threejs.org/build/three.min.js"></script>
 </head>
 <body>
-    <script src="https://threejs.org/build/three.min.js"></script>
     <script>
+        // Scene, Camera, and Renderer
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Central sphere (sun) with texture
+        // Central Sphere - Sun
         const sunGeometry = new THREE.SphereGeometry(6, 32, 32);
-        const sunTexture = new THREE.TextureLoader().load('logo.png'); // Replace with the path to your image
+        const sunTexture = new THREE.TextureLoader().load('logo.png');
         const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
         const sun = new THREE.Mesh(sunGeometry, sunMaterial);
         scene.add(sun);
 
-        // Variables for the elliptical orbit
+        // Planets Variables
         const numberOfPlanets = 10;
-        const orbitRadiusX = 30; // Width of the ellipse
-        const orbitRadiusZ = 15; // Height of the ellipse
-        const orbitTiltAngle = -0.2; // Downward tilt
+        const orbitRadiusX = 30;
+        const orbitRadiusZ = 15;
+        const orbitTiltAngle = -0.2;
         const orbitingSpheres = [];
 
-        // Create orbiting spheres (planets)
+        // Creating Planets
         for (let i = 0; i < numberOfPlanets; i++) {
             const planetGeometry = new THREE.SphereGeometry(2, 100, 100);
-            const sunTexture = new THREE.TextureLoader().load(i + '.png');
-            const planetMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
-
+            const planetTexture = new THREE.TextureLoader().load(i + '.png');
+            const planetMaterial = new THREE.MeshBasicMaterial({ map: planetTexture });
             const planet = new THREE.Mesh(planetGeometry, planetMaterial);
 
-            const angle = (2 * Math.PI / numberOfPlanets) * i;
-            planet.position.x = orbitRadiusX * Math.cos(angle);
-            planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
-            planet.position.z = orbitRadiusZ * Math.sin(angle) * Math.cos(orbitTiltAngle);
+            planet.position.x = orbitRadiusX * Math.cos((2 * Math.PI / numberOfPlanets) * i);
+            planet.position.y = orbitRadiusZ * Math.sin((2 * Math.PI / numberOfPlanets) * i) * Math.sin(orbitTiltAngle);
+            planet.position.z = orbitRadiusZ * Math.sin((2 * Math.PI / numberOfPlanets) * i) * Math.cos(orbitTiltAngle);
 
-            planet.userData.draggable = true; // Flag for draggable planets
+            planet.userData = { 
+                rotationVelocity: { x: 0, y: 0 },
+                damping: 0.95
+            };
+
             scene.add(planet);
             orbitingSpheres.push(planet);
         }
 
-        // Camera position
-        camera.position.x = 50; // Move to the right
-        camera.position.y = 50; // Move up
-        camera.position.z = -50; // Adjust the depth
-
-        // Make the camera look at the center of the scene
+        // Camera Position
+        camera.position.set(50, 50, -50);
         camera.lookAt(scene.position);
 
-        // Raycaster for mouse/touch interaction
+        // Raycaster and Mouse Variables
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let isDragging = false;
@@ -62,69 +61,72 @@
         let previousMousePosition = { x: 0, y: 0 };
 
         function updateMousePosition(event) {
-            const x = event.clientX || event.touches[0].clientX;
-            const y = event.clientY || event.touches[0].clientY;
-            mouse.x = (x / window.innerWidth) * 2 - 1;
-            mouse.y = -(y / window.innerHeight) * 2 + 1;
+            mouse.x = ((event.clientX || event.touches[0].clientX) / window.innerWidth) * 2 - 1;
+            mouse.y = -((event.clientY || event.touches[0].clientY) / window.innerHeight) * 2 + 1;
         }
 
         function onMouseDown(event) {
             updateMousePosition(event);
-            const intersects = getIntersects(mouse, orbitingSpheres);
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(orbitingSpheres);
 
             if (intersects.length > 0) {
                 isDragging = true;
                 selectedPlanet = intersects[0].object;
-                previousMousePosition = { x: event.clientX, y: event.clientY };
+                previousMousePosition.x = mouse.x;
+                previousMousePosition.y = mouse.y;
             }
         }
 
         function onMouseMove(event) {
-            if (isDragging && selectedPlanet) {
-                updateMousePosition(event);
+            if (!isDragging || !selectedPlanet) return;
+            updateMousePosition(event);
 
-                const deltaX = mouse.x - previousMousePosition.x;
-                const deltaY = mouse.y - previousMousePosition.y;
+            const deltaX = event.clientX - previousMousePosition.x;
+            const deltaY = event.clientY - previousMousePosition.y;
 
-                selectedPlanet.rotation.y += deltaX * 0.02;
-                selectedPlanet.rotation.x += deltaY * 0.02;
+            selectedPlanet.userData.rotationVelocity.y += deltaX * 0.0005;
+            selectedPlanet.userData.rotationVelocity.x += deltaY * 0.0005;
 
-                previousMousePosition = { x: mouse.x, y: mouse.y };
-            }
+            previousMousePosition.x = event.clientX;
+            previousMousePosition.y = event.clientY;
         }
 
         function onMouseUp() {
             isDragging = false;
-            selectedPlanet = null;
         }
 
-        // Event listeners for mouse
+        // Event Listeners
         document.addEventListener('mousedown', onMouseDown, false);
         document.addEventListener('mousemove', onMouseMove, false);
         document.addEventListener('mouseup', onMouseUp, false);
-
-        // Event listeners for touch
         document.addEventListener('touchstart', onMouseDown, false);
         document.addEventListener('touchmove', onMouseMove, false);
         document.addEventListener('touchend', onMouseUp, false);
 
-        // Animation loop
+        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
 
-            // Update planet positions and scale for elliptical orbit
-            orbitingSpheres.forEach((planet, index) => {
+            orbitingSpheres.forEach((planet) => {
                 const time = Date.now() * 0.001;
+                const index = orbitingSpheres.indexOf(planet);
                 const angle = (2 * Math.PI / numberOfPlanets) * index + 0.1 * time;
 
                 planet.position.x = orbitRadiusX * Math.cos(angle);
                 planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
                 planet.position.z = orbitRadiusZ * Math.sin(angle) * Math.cos(orbitTiltAngle);
 
-                // Dynamic scaling based on distance to camera
                 const distance = camera.position.distanceTo(planet.position);
                 const scale = Math.max(2, 2 - Math.abs(distance - camera.position.z) / 20);
                 planet.scale.set(scale, scale, scale);
+
+                // Apply rotation velocity and damping
+                planet.rotation.y += planet.userData.rotationVelocity.y;
+                planet.rotation.x += planet.userData.rotationVelocity.x;
+
+                planet.userData.rotationVelocity.x *= planet.userData.damping;
+                planet.userData.rotationVelocity.y *= planet.userData.damping;
             });
 
             renderer.render(scene, camera);
@@ -132,11 +134,6 @@
 
         animate();
 
-        // Function to get intersects
-        function getIntersects(mouse, objects) {
-            raycaster.setFromCamera(mouse, camera);
-            return raycaster.intersectObjects(objects.filter(obj => obj.userData.draggable));
-        }
     </script>
 </body>
 </html>

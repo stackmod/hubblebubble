@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Planetary System</title>
+  <style>
+    body { margin: 0; }
+  </style>
+</head>
+<body>
+  <script type="module">
+    import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js';
+    import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/controls/OrbitControls.js';
+
+    // Setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Sun
+    const sunTexture = new THREE.TextureLoader().load('logo.png');
+    const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+    const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
+    const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+    scene.add(sun);
+
+    // Planets
+    const planets = [];
+    const planetTextures = [
+      '1.png',
+      '2.png',
+      '3.png',
+      '4.png',
+      '5.png',
+      // Add more planet textures as needed
+    ];
+
+    for (let i = 0; i < planetTextures.length; i++) {
+      const texture = new THREE.TextureLoader().load(planetTextures[i]);
+      const planetGeometry = new THREE.SphereGeometry(2, 32, 32);
+      const planetMaterial = new THREE.MeshBasicMaterial({ map: texture });
+      const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+
+      // Set initial positions along an elliptical orbit
+      const angle = (i / planetTextures.length) * Math.PI * 2;
+      const distance = 15 + i * 5;
+      planet.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
+
+      // Set initial orbital tilt
+      planet.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+
+      planets.push(planet);
+      scene.add(planet);
+    }
+
+    // Event listeners for mouse interaction
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+
+    function onMouseDown(event) {
+      isDragging = true;
+      previousMousePosition = { x: event.clientX, y: event.clientY };
+    }
+
+    function onMouseMove(event) {
+      if (isDragging) {
+        const deltaMove = {
+          x: event.clientX - previousMousePosition.x,
+          y: event.clientY - previousMousePosition.y
+        };
+
+        for (const planet of planets) {
+          planet.rotation.y += (deltaMove.x / window.innerWidth) * Math.PI * 2;
+        }
+
+        previousMousePosition = { x: event.clientX, y: event.clientY };
+      }
+    }
+
+    function onMouseUp() {
+      isDragging = false;
+    }
+
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    // Set up camera and controls
+    camera.position.z = 30;
+    const controls = new OrbitControls(camera, renderer.domElement);
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Add dynamic scaling based on distance to the camera
+      for (const planet of planets) {
+        const distance = camera.position.distanceTo(planet.position);
+        const scale = 1 / (distance / 10);
+        planet.scale.set(scale, scale, scale);
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

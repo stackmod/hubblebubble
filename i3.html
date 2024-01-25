@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Planetary System</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, controls;
+        let sun, planets = [];
+        let orbitRadius = 15; // Single radius for the circular orbit
+        let orbitSpeed = 0.01; // Speed of revolution around the orbit
+
+        const orbitRadiusX = 30; // Width of the ellipse
+        const orbitRadiusZ = 15; // Height of the ellipse
+        const orbitTiltAngle = 5; // Downward tilt
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.5, 200);
+            
+            // Camera position
+            camera.position.x = 50; // Move to the right
+            camera.position.y = 50; // Move up
+            camera.position.z = -50; // Adjust the depth
+
+            // Make the camera look at the center of the scene
+            camera.lookAt(scene.position);
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Sun
+            const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFF00 });
+            sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            scene.add(sun);
+
+            // Planets in a single circular orbit
+            const numPlanets = 10;
+            const angleStep = (2 * Math.PI) / numPlanets; // Equally spaced
+            for (let i = 0; i < numPlanets; i++) {
+
+                const planetGeometry = new THREE.SphereGeometry(2, 100, 100);
+                const sunTexture = new THREE.TextureLoader().load(i + '.png');
+                const planetMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
+
+                // let planetGeometry = new THREE.SphereGeometry(1, 32, 32);
+                // let planetMaterial = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+                let planet = new THREE.Mesh(planetGeometry, planetMaterial);
+                
+                // // Positioning on the same orbit
+                const angle = (2 * Math.PI / numPlanets) * i;
+                planet.position.x = orbitRadiusX * Math.cos(angle);
+                planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
+                planet.position.z = orbitRadiusZ * Math.sin(angle) * Math.cos(orbitTiltAngle);
+
+                scene.add(planet);
+                planets.push(planet);
+            }
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            controls.minPolarAngle = Math.PI / 2;
+            controls.maxPolarAngle = Math.PI / 2;
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate planets in the same orbit
+            planets.forEach((planet, index) => {
+                let angle = orbitSpeed * Date.now() * 0.01 + (index * (2 * Math.PI) / planets.length);
+                planet.position.x = sun.position.x + orbitRadius * Math.sin(angle);
+                planet.position.z = sun.position.z + orbitRadius * Math.cos(angle);
+                // planet.position.y = sun.position.y + orbitRadius * Math.tan(angle);
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
