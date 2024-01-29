@@ -61,13 +61,8 @@
         let previousMousePosition = { x: 0, y: 0 };
 
         function updateMousePosition(event) {
-            if (event.changedTouches) {
-                mouse.x = (event.changedTouches[0].clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(event.changedTouches[0].clientY / window.innerHeight) * 2 + 1;
-            } else {
-                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            }
+            mouse.x = ((event.clientX || event.touches[0].clientX) / window.innerWidth) * 2 - 1;
+            mouse.y = -((event.clientY || event.touches[0].clientY) / window.innerHeight) * 2 + 1;
         }
 
         function onMouseDown(event) {
@@ -84,35 +79,37 @@
         }
 
         function onMouseMove(event) {
-            event.preventDefault(); // Prevent default touch event behavior
+        event.preventDefault(); // Prevent default touch event behavior
 
-            if (!isDragging || !selectedPlanet) return;
-            updateMousePosition(event);
+        if (!isDragging || !selectedPlanet) return;
+        updateMousePosition(event);
 
-            let deltaX, deltaY;
-            if (event.changedTouches) {
-                deltaX = event.changedTouches[0].clientX - previousMousePosition.x;
-                deltaY = event.changedTouches[0].clientY - previousMousePosition.y;
-            } else {
-                deltaX = event.clientX - previousMousePosition.x;
-                deltaY = event.clientY - previousMousePosition.y;
-            }
-
-            selectedPlanet.userData.rotationVelocity.y += deltaX * 0.0005; // Adjust sensitivity if needed
-            selectedPlanet.userData.rotationVelocity.x += deltaY * 0.0005; // Adjust sensitivity if needed
-
-            if (event.changedTouches) {
-                previousMousePosition.x = event.changedTouches[0].clientX;
-                previousMousePosition.y = event.changedTouches[0].clientY;
-            } else {
-                previousMousePosition.x = event.clientX;
-                previousMousePosition.y = event.clientY;
-            }
+        let deltaX, deltaY;
+        if (event.changedTouches) {
+            deltaX = event.changedTouches[0].clientX - previousMousePosition.x;
+            deltaY = event.changedTouches[0].clientY - previousMousePosition.y;
+        } else {
+            deltaX = event.clientX - previousMousePosition.x;
+            deltaY = event.clientY - previousMousePosition.y;
         }
+
+        selectedPlanet.userData.rotationVelocity.y += deltaX * 0.0005; // Adjust sensitivity if needed
+        selectedPlanet.userData.rotationVelocity.x += deltaY * 0.0005; // Adjust sensitivity if needed
+
+        if (event.changedTouches) {
+            previousMousePosition.x = event.changedTouches[0].clientX;
+            previousMousePosition.y = event.changedTouches[0].clientY;
+        } else {
+            previousMousePosition.x = event.clientX;
+            previousMousePosition.y = event.clientY;
+        }
+    }
 
 
         function onMouseUp() {
-            isDragging = false;
+            // setTimeout(function(){
+                isDragging = false;
+            // },1000);
         }
 
         // Event Listeners
@@ -123,12 +120,42 @@
         document.addEventListener('touchmove', onMouseMove, false);
         document.addEventListener('touchend', onMouseUp, false);
 
+        var timeVar = Date.now() * 0.0001;
+
         // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
 
+            if(isDragging == false){
+                orbitingSpheres.forEach((planet) => {
+                    this.timeVar = this.timeVar + 0.001;
+                    const time = this.timeVar;
+                    const index = orbitingSpheres.indexOf(planet);
+                    const angle = (2 * Math.PI / numberOfPlanets) * index + 0.1 * time;
+
+                    planet.position.x = orbitRadiusX * Math.cos(angle);
+                    planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
+                    planet.position.z = orbitRadiusZ * Math.sin(angle) * Math.cos(orbitTiltAngle);
+
+                    const distance = camera.position.distanceTo(planet.position);
+                    const scale = Math.max(2, 2 - Math.abs(distance - camera.position.z) / 20);
+                    planet.scale.set(scale, scale, scale);
+
+                    // Apply rotation velocity and damping
+                    planet.rotation.y += planet.userData.rotationVelocity.y;
+                    planet.rotation.x += planet.userData.rotationVelocity.x;
+
+                    planet.userData.rotationVelocity.x *= planet.userData.damping;
+                    planet.userData.rotationVelocity.y *= planet.userData.damping;
+                });
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function moveForward(){
             orbitingSpheres.forEach((planet) => {
-                const time = Date.now() * 0.001;
+                const time = Date.now() * 0.09;
                 const index = orbitingSpheres.indexOf(planet);
                 const angle = (2 * Math.PI / numberOfPlanets) * index + 0.1 * time;
 
@@ -147,7 +174,6 @@
                 planet.userData.rotationVelocity.x *= planet.userData.damping;
                 planet.userData.rotationVelocity.y *= planet.userData.damping;
             });
-
             renderer.render(scene, camera);
         }
 
