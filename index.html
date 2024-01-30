@@ -82,13 +82,14 @@
                 previousMousePosition.x = mouse.x; // Update the previous mouse position
                 previousMousePosition.y = mouse.y;
             }
+            toggleDirection();
         }
 
         // Function to handle mouse move event
         function onMouseMove(event) {
             event.preventDefault(); // Prevent default behavior of the event
 
-            if (!isDragging || !selectedPlanet) return; // Exit if not dragging or no planet is selected
+            if (!isDragging) return; // Exit if not dragging or no planet is selected
             updateMousePosition(event); // Update mouse position
 
             let deltaX, deltaY;
@@ -129,6 +130,19 @@
 
         // Variable for time calculation
         var timeVar = Date.now() * 0.0001;
+        var rotationDirection = "acl";
+
+        function toggleDirection(direction = null){
+            if(direction){
+                rotationDirection = direction
+            }else{
+                if(rotationDirection == "cl"){
+                    rotationDirection = "acl";
+                }else{
+                    rotationDirection = "cl";
+                }
+            }
+        }
 
         // Animation loop
         function animate() {
@@ -138,8 +152,13 @@
             if(isDragging == false){
                 orbitingSpheres.forEach((planet) => {
                     // Time-based animation for planet movement
-                    this.timeVar = this.timeVar + 0.001;
+                    if(rotationDirection == "cl"){
+                        this.timeVar = this.timeVar + 0.001;
+                    }else{
+                        this.timeVar = this.timeVar - 0.001;
+                    }
                     const time = this.timeVar;
+
                     const index = orbitingSpheres.indexOf(planet);
                     const angle = (2 * Math.PI / numberOfPlanets) * index + 0.1 * time;
 
