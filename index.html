@@ -82,7 +82,7 @@
                 previousMousePosition.x = mouse.x; // Update the previous mouse position
                 previousMousePosition.y = mouse.y;
             }
-            toggleDirection();
+            // toggleDirection();
         }
 
         // Function to handle mouse move event
@@ -99,6 +99,12 @@
             } else {
                 deltaX = event.clientX - previousMousePosition.x; // Calculate deltaX for mouse
                 deltaY = event.clientY - previousMousePosition.y; // Calculate deltaY for mouse
+            }
+
+            if(deltaX > 0){
+                toggleDirection("acl");
+            }else{
+                toggleDirection("cl");
             }
 
             // Adjust planet rotation velocity based on drag
