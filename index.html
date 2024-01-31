@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simpless</title>
+    <title>Hubble Bubble</title>
 </head>
 <body style="margin:0">
     <script type="module">
@@ -87,7 +87,6 @@
                 previousMousePosition.x = mouse.x; // Update the previous mouse position
                 previousMousePosition.y = mouse.y;
             }
-            // toggleDirection();
         }
 
         // Function to handle mouse move event
@@ -113,8 +112,8 @@
             }
 
             // Adjust planet rotation velocity based on drag
-            selectedPlanet.userData.rotationVelocity.y += deltaX * 0.0005; // Adjust Y velocity
-            selectedPlanet.userData.rotationVelocity.x += deltaY * 0.0005; // Adjust X velocity
+            // selectedPlanet.userData.rotationVelocity.y += deltaX * 0.0005; // Adjust Y velocity
+            // selectedPlanet.userData.rotationVelocity.x += deltaY * 0.0005; // Adjust X velocity
 
             // Update previous mouse position
             if (event.changedTouches) {
@@ -142,8 +141,8 @@
         function generateSineWave(maxValue, steps, decimalPlaces = 2) {
             let wave = [];
             for (let i = 0; i < steps; i++) {
-                // Scale 'i' to fit the 0 to 2PI range (full sine wave)
-                let x = (2 * Math.PI / (steps - 1)) * i;
+                // Scale 'i' to fit the 0 to PI range (half sine wave)
+                let x = (Math.PI / (steps - 1)) * i;
 
                 // Calculate the sine value and shift it to oscillate between 0 and 1
                 let sineValue = (Math.sin(x) + 1) / 2;
