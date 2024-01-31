@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simpless</title>
-    <!-- Include Three.js library -->
-    <script src="https://threejs.org/build/three.min.js"></script>
 </head>
 <body style="margin:0">
-    <script>
+    <script type="module">
+        // Include Three.js module
+        import * as THREE from './node_modules/three/build/three.module.min.js';
+
         // Scene setup
         const scene = new THREE.Scene(); // Create a new scene
         const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000); // Create a perspective camera
@@ -16,9 +17,13 @@
         renderer.setSize(window.innerWidth, window.innerHeight); // Set the size of the renderer
         document.body.appendChild(renderer.domElement); // Append the renderer to the document body
 
+        // Variable for time calculation
+        var timeVar = Date.now() * 0.0001;
+        var rotationDirection = "acl";
+
         // Create a central sphere to represent the Sun
         const sunGeometry = new THREE.SphereGeometry(6, 32, 32); // Define the geometry for the sphere
-        const sunTexture = new THREE.TextureLoader().load('logo.png'); // Load texture for the sphere
+        const sunTexture = new THREE.TextureLoader().load('img/logo.png'); // Load texture for the sphere
         const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture }); // Create material with the texture
         const sun = new THREE.Mesh(sunGeometry, sunMaterial); // Create a mesh with the geometry and material
         scene.add(sun); // Add the sun to the scene
@@ -33,7 +38,7 @@
         // Create planets
         for (let i = 0; i < numberOfPlanets; i++) {
             const planetGeometry = new THREE.SphereGeometry(2, 100, 100); // Define geometry for each planet
-            const planetTexture = new THREE.TextureLoader().load(i + '.png'); // Load texture for each planet
+            const planetTexture = new THREE.TextureLoader().load('img/planets/'+ i + '.png'); // Load texture for each planet
             const planetMaterial = new THREE.MeshBasicMaterial({ map: planetTexture }); // Create material with texture
             const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
 
@@ -134,9 +139,28 @@
         document.addEventListener('touchmove', onMouseMove, false);
         document.addEventListener('touchend', onMouseUp, false);
 
-        // Variable for time calculation
-        var timeVar = Date.now() * 0.0001;
-        var rotationDirection = "acl";
+        function generateSineWave(maxValue, steps, decimalPlaces = 2) {
+            let wave = [];
+            for (let i = 0; i < steps; i++) {
+                // Scale 'i' to fit the 0 to 2PI range (full sine wave)
+                let x = (2 * Math.PI / (steps - 1)) * i;
+
+                // Calculate the sine value and shift it to oscillate between 0 and 1
+                let sineValue = (Math.sin(x) + 1) / 2;
+
+                // Scale the sine value to be between 0 and maxValue
+                let scaledValue = sineValue * maxValue;
+
+                // Round to the specified number of decimal places and convert back to number
+                scaledValue = parseFloat(scaledValue.toFixed(decimalPlaces));
+
+                // Append the scaled value to the array
+                wave.push(scaledValue);
+            }
+            return wave.reverse();
+        }
+
+        var sineWaveValues = [];
 
         function toggleDirection(direction = null){
             if(direction){
@@ -148,6 +172,7 @@
                     rotationDirection = "cl";
                 }
             }
+            sineWaveValues = generateSineWave(0.010, 1000, 19);
         }
 
         // Animation loop
@@ -159,11 +184,13 @@
                 orbitingSpheres.forEach((planet) => {
                     // Time-based animation for planet movement
                     if(rotationDirection == "cl"){
-                        this.timeVar = this.timeVar + 0.001;
+                        var swValue = sineWaveValues.pop();
+                        timeVar = timeVar + (0.001 + (swValue!=undefined ? swValue : 0));
                     }else{
-                        this.timeVar = this.timeVar - 0.001;
+                        var swValue = sineWaveValues.pop();
+                        timeVar = timeVar - (0.001 + (swValue!=undefined ? swValue : 0));
                     }
-                    const time = this.timeVar;
+                    const time = timeVar;
 
                     const index = orbitingSpheres.indexOf(planet);
                     const angle = (2 * Math.PI / numberOfPlanets) * index + 0.1 * time;
