@@ -6,9 +6,21 @@
     <title>Hubble Bubble</title>
 </head>
 <body style="margin:0">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./node_modules/three/build/three.module.min.js",
+                "three/addons/": "./node_modules/three/examples/jsm/",
+                "three/fonts/": "./node_modules/three/examples/fonts/"
+            }
+        }
+    </script>
     <script type="module">
         // Include Three.js module
-        import * as THREE from './node_modules/three/build/three.module.min.js';
+        import * as THREE from 'three';
+        import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+        import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
 
         // Scene setup
         const scene = new THREE.Scene(); // Create a new scene
@@ -23,7 +35,7 @@
 
         // Create a central sphere to represent the Sun
         const sunGeometry = new THREE.SphereGeometry(6, 32, 32); // Define the geometry for the sphere
-        const sunTexture = new THREE.TextureLoader().load('img/logo.png'); // Load texture for the sphere
+        const sunTexture = new THREE.TextureLoader().load('./img/logo.png'); // Load texture for the sphere
         const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture }); // Create material with the texture
         const sun = new THREE.Mesh(sunGeometry, sunMaterial); // Create a mesh with the geometry and material
         scene.add(sun); // Add the sun to the scene
@@ -201,7 +213,7 @@
 
                     // Calculate distance from camera to adjust scale
                     const distance = camera.position.distanceTo(planet.position);
-                    const scale = Math.max(2, 2 - Math.abs(distance - camera.position.z) / 20);
+                    const scale = Math.max(1, 5 - Math.abs(distance - camera.position.z) / 60);
                     planet.scale.set(scale, scale, scale);
 
                     // Apply rotation velocity and damping to the planet
