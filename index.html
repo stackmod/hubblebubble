@@ -28,7 +28,7 @@
 
         // Scene setup
         const scene = new THREE.Scene(); // Create a new scene
-        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000); // Create a perspective camera
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000); // Create a perspective camera
         const renderer = new THREE.WebGLRenderer(); // Create a WebGL renderer
         renderer.setSize(window.innerWidth, window.innerHeight); // Set the size of the renderer
         document.body.appendChild(renderer.domElement); // Append the renderer to the document body
@@ -44,26 +44,11 @@
         const sun = new THREE.Mesh(sunGeometry, sunMaterial); // Create a mesh with the geometry and material
         scene.add(sun); // Add the sun to the scene
 
-        // EffectComposer setup
-        const composer = new EffectComposer(renderer);
-        composer.addPass(new RenderPass(scene, camera));
-
-        // BokehPass setup
-        const bokehPass = new BokehPass(scene, camera, {
-            focus: 78.0, // Adjusted to the distance of the closest planet
-            aperture: 0.003, // Smaller aperture to make the effect more subtle
-            maxblur: 0.009, // Increased max blur for a stronger effect on far-away planets
-    
-            width: window.innerWidth,
-            height: window.innerHeight
-        });
-        composer.addPass(bokehPass);
-
         // Variables for planets
-        const numberOfPlanets = 10; // Number of planets
+        const numberOfPlanets = 9; // Number of planets
         const orbitRadiusX = 30; // X radius for the orbit
         const orbitRadiusZ = 15; // Z radius for the orbit
-        const orbitTiltAngle = -0.3; // Tilt angle for the orbit
+        const orbitTiltAngle = 0; // Tilt angle for the orbit
         const orbitingSpheres = []; // Array to store the orbiting spheres (planets)
 
         // Create planets
@@ -89,7 +74,7 @@
         }
 
         // Set camera position and orientation
-        camera.position.set(100, 40, -5); // Position the camera
+        camera.position.set(80, 25, 0); // Position the camera
         camera.lookAt(scene.position); // Make the camera look at the center of the scene
 
         // Raycaster and mouse setup for interaction
@@ -98,6 +83,21 @@
         let isDragging = false; // Flag to check if dragging is occurring
         let selectedPlanet = null; // Store the currently selected planet
         let previousMousePosition = { x: 0, y: 0 }; // Store the previous mouse position
+
+        // EffectComposer setup
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+
+        // BokehPass setup
+        const bokehPass = new BokehPass(scene, camera, {
+            focus: 55.0, // Adjusted to the distance of the closest planet
+            aperture: 0.003, // Smaller aperture to make the effect more subtle
+            maxblur: 0.009, // Increased max blur for a stronger effect on far-away planets
+    
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+        composer.addPass(bokehPass);
 
         // Update mouse position function
         function updateMousePosition(event) {
