@@ -20,6 +20,7 @@
         import * as THREE from 'three';
         import { FontLoader } from 'three/addons/loaders/FontLoader.js';
         import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -75,7 +76,7 @@
         }
 
         //Enable debug grid
-        //debugSpace();
+        // debugSpace();
 
         addLights();
 
@@ -91,8 +92,53 @@
         let previousMousePosition = { x: 0, y: 0 }; // Store the previous mouse position
 
         // EffectComposer setup
-        const composer = new EffectComposer(renderer);
-        composer.addPass(new RenderPass(scene, camera));
+        // const composer = new EffectComposer(renderer);
+        // composer.addPass(new RenderPass(scene, camera));
+
+        // OrbitControls setup
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableZoom = false; // Disable zoom
+        controls.enableRotate = true; // Disable rotation
+        controls.enablePan = false; // Enable panning
+        controls.screenSpacePanning = true; // Limit panning to vertical direction
+        // controls.panSpeed = 0.00001; // Adjust the speed of panning
+        // controls.keyPanSpeed = 7.0; // Speed of panning via arrow keys
+
+        // Default camera position and orientation
+        const defaultPosition = camera.position.clone();
+        const defaultQuaternion = camera.quaternion.clone();
+
+        // Variables to control the smooth transition
+        let transitioningBack = false;
+        const transitionSpeed = 0.05;
+
+        // Function to start the smooth transition
+        function startTransitionBack() {
+            transitioningBack = true;
+        }
+
+        // Function to perform the smooth transition
+        function smoothTransitionToDefault() {
+            if (!transitioningBack) return;
+
+            var quaternion = new THREE.Quaternion();
+
+            // Smoothly interpolate position and quaternion
+            camera.position.lerp(defaultPosition, transitionSpeed);
+
+            // Interpolate rotation (quaternion)
+            quaternion.slerp(camera.quaternion, defaultQuaternion, camera.quaternion, transitionSpeed);
+
+            // Check if the position and rotation are close enough to the defaults to stop the transition
+            if (camera.position.distanceTo(defaultPosition) < 0.01 && camera.quaternion.angleTo(defaultQuaternion) < 0.01) {
+                transitioningBack = false; // Stop the transition
+                camera.position.copy(defaultPosition); // Ensure exact default position
+                camera.quaternion.copy(defaultQuaternion); // Ensure exact default rotation
+            }
+        }
+
+        // Event listener for when user stops interacting
+        controls.addEventListener('end', startTransitionBack);
 
         // Add bokeh effect
         // addBokeh();
@@ -176,6 +222,7 @@
             spotLight.lookAt(sun);
             scene.add(spotLight);
         }
+
 
         // Add event listeners for mouse and touch events
         document.addEventListener('mousedown', onMouseDown, false);
@@ -285,6 +332,10 @@
                     camera.lookAt(scene.position); // Make sure the camera still looks at the scene center
                 });
             }
+            
+            controls.update(); // Only required if damping is enabled, or if auto-rotate is enabled
+            smoothTransitionToDefault(); // Add this line to perform the smooth transition when needed
+
             // composer.render();
             renderer.render(scene, camera); // Render the scene
         }
