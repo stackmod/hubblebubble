@@ -8,10 +8,20 @@
     </style>
 </head>
 <body>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/controls/OrbitControls.js"></script>
-    <script>
-        let scene, camera, renderer, light;
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./node_modules/three/build/three.module.min.js",
+                "three/addons/": "./node_modules/three/examples/jsm/",
+                "three/fonts/": "./node_modules/three/examples/fonts/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, light, ambientLight;
         const planets = [];
         const planetTextures = ['0.png', '1.png', '2.png', '3.png', '4.png', '5.png', '6.png', '7.png', '8.png', '9.png'];
         const planetLinks = ['url0', 'url1', 'url2', 'url3', 'url4', 'url5', 'url6', 'url7', 'url8', 'url9'];
@@ -30,14 +40,14 @@
 
             // Sun
             const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-            const sunMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('logo.png') });
+            const sunMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
             const sun = new THREE.Mesh(sunGeometry, sunMaterial);
             scene.add(sun);
 
             // Planets
             for (let i = 0; i < 10; i++) {
                 const planetGeometry = new THREE.SphereGeometry(1, 32, 32);
-                const planetMaterial = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(planetTextures[i]) });
+                const planetMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff }); // Assuming placeholder colors for demonstration
                 const planet = new THREE.Mesh(planetGeometry, planetMaterial);
                 planet.position.x = 10 * Math.cos((2 * Math.PI / 10) * i);
                 planet.position.y = 10 * Math.sin((2 * Math.PI / 10) * i);
@@ -47,18 +57,21 @@
             }
 
             // Lighting
-            light = new THREE.PointLight(0xffffff, 1, 100);
-            light.position.set(0, 0, 25);
+            light = new THREE.PointLight(0xffffff, 5000, 0);
+            light.position.set(40, 0, 10); // Adjusted to be above the sun
             scene.add(light);
 
+            // Ambient light
+            ambientLight = new THREE.AmbientLight(0x404040); // soft white light
+            scene.add(ambientLight);
+
             // Optional: OrbitControls
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableZoom = false;
-            controls.enablePan = false;
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableZoom = true;
+            controls.enablePan = true;
 
             // Event Listeners
             window.addEventListener('resize', onWindowResize, false);
-            document.addEventListener('mousedown', onDocumentMouseDown, false);
         }
 
         function onWindowResize() {
@@ -67,28 +80,8 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        function onDocumentMouseDown(event) {
-            event.preventDefault();
-            const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2();
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(planets);
-            if (intersects.length > 0) {
-                window.location.href = intersects[0].object.userData.URL;
-            }
-        }
-
         function animate() {
             requestAnimationFrame(animate);
-            planets.forEach((planet, index) => {
-                const angle = (Date.now() * 0.001 + index * 0.4) % (2 * Math.PI);
-                planet.position.x = 10 * Math.cos(angle);
-                planet.position.y = 10 * Math.sin(angle);
-                const distance = camera.position.distanceTo(planet.position);
-                planet.scale.setScalar(1 + 1 / distance);
-            });
             renderer.render(scene, camera);
         }
     </script>

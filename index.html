@@ -40,7 +40,7 @@
         // Create a central sphere to represent the Sun
         const sunGeometry = new THREE.SphereGeometry(4, 32, 32); // Define the geometry for the sphere
         const sunTexture = new THREE.TextureLoader().load('./img/logo.png'); // Load texture for the sphere
-        const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture }); // Create material with the texture
+        const sunMaterial = new THREE.MeshStandardMaterial({ map: sunTexture }); // Create material with the texture
         const sun = new THREE.Mesh(sunGeometry, sunMaterial); // Create a mesh with the geometry and material
         scene.add(sun); // Add the sun to the scene
 
@@ -56,7 +56,7 @@
         for (let i = 0; i < numberOfPlanets; i++) {
             const planetGeometry = new THREE.SphereGeometry(0.9, 32, 32); // Define geometry for each planet
             const planetTexture = new THREE.TextureLoader().load('img/planets/'+ i + '.png'); // Load texture for each planet
-            const planetMaterial = new THREE.MeshBasicMaterial({ map: planetTexture }); // Create material with texture
+            const planetMaterial = new THREE.MeshStandardMaterial({ map: planetTexture }); // Create material with texture
             const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
 
             // Position each planet on its orbit
@@ -75,7 +75,9 @@
         }
 
         //Enable debug grid
-        // debugSpace();
+        //debugSpace();
+
+        addLights();
 
         // Set camera position and orientation
         camera.position.set(90, 20, 0); // Position the camera
@@ -157,6 +159,24 @@
             isDragging = false; // Disable dragging
         }
 
+        function addLights(){
+            // // Ambient light
+            // const ambientLight = new THREE.AmbientLight(0xffffff, 0.09); // soft white light
+            // scene.add(ambientLight);
+
+            // // Point Lighting
+            // const light = new THREE.PointLight(0xffffff, 5000, 95);
+            // light.position.set(90, 0, 0);
+            // scene.add(light);
+
+            // // Spotlight
+            const spotLight = new THREE.SpotLight(0xffffff, 6000);
+            spotLight.position.set(90, 20, 0); // Position the light above the scene
+            spotLight.distance = 1000; // Light affects objects within 100 units
+            spotLight.lookAt(sun);
+            scene.add(spotLight);
+        }
+
         // Add event listeners for mouse and touch events
         document.addEventListener('mousedown', onMouseDown, false);
         document.addEventListener('mousemove', onMouseMove, false);
@@ -198,43 +218,6 @@
             const divisions = 25;
             const gridHelper = new THREE.GridHelper(size, divisions);
             scene.add(gridHelper);
-
-            // Adding text to label axes, using the FontLoader and TextGeometry
-            const loader = new FontLoader();
-
-            // Load a font and create text
-            loader.load('three/fonts/helvetiker_regular.typeface.json', function (font) {
-                const textGeometryX = new TextGeometry('X', {
-                    font: font,
-                    size: 1,
-                    height: 0.1,
-                });
-                const textGeometryY = new TextGeometry('Y', {
-                    font: font,
-                    size: 1,
-                    height: 0.1,
-                });
-                const textGeometryZ = new TextGeometry('Z', {
-                    font: font,
-                    size: 1,
-                    height: 0.1,
-                });
-
-                const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-
-                const labelX = new THREE.Mesh(textGeometryX, textMaterial);
-                labelX.position.set(25, 0, 0); // Position at the end of the x-axis
-
-                const labelY = new THREE.Mesh(textGeometryY, textMaterial);
-                labelY.position.set(0, 25, 0); // Position at the end of the y-axis
-
-                const labelZ = new THREE.Mesh(textGeometryZ, textMaterial);
-                labelZ.position.set(0, 0, 25); // Position at the end of the z-axis
-
-                scene.add(labelX);
-                scene.add(labelY);
-                scene.add(labelZ);
-            });
         }
 
         function addBokeh(){
@@ -302,8 +285,8 @@
                     camera.lookAt(scene.position); // Make sure the camera still looks at the scene center
                 });
             }
-            composer.render();
-            // renderer.render(scene, camera); // Render the scene
+            // composer.render();
+            renderer.render(scene, camera); // Render the scene
         }
 
         animate(); // Start the animation loop
