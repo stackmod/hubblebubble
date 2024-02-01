@@ -21,6 +21,10 @@
         import { FontLoader } from 'three/addons/loaders/FontLoader.js';
         import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+
 
         // Scene setup
         const scene = new THREE.Scene(); // Create a new scene
@@ -39,6 +43,22 @@
         const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture }); // Create material with the texture
         const sun = new THREE.Mesh(sunGeometry, sunMaterial); // Create a mesh with the geometry and material
         scene.add(sun); // Add the sun to the scene
+
+        // EffectComposer setup
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+
+        // BokehPass setup
+        const bokehPass = new BokehPass(scene, camera, {
+            focus: 68.0, // Adjusted to the distance of the closest planet
+            aperture: 0.003, // Smaller aperture to make the effect more subtle
+            maxblur: 0.02, // Increased max blur for a stronger effect on far-away planets
+    
+            
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+        composer.addPass(bokehPass);
 
         // Variables for planets
         const numberOfPlanets = 10; // Number of planets
@@ -223,8 +243,8 @@
                     planet.userData.rotationVelocity.y *= planet.userData.damping;
                 });
             }
-
-            renderer.render(scene, camera); // Render the scene
+            composer.render();
+            // renderer.render(scene, camera); // Render the scene
         }
 
         animate(); // Start the animation loop
