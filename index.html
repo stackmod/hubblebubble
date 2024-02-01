@@ -47,8 +47,8 @@
         // Variables for planets
         const numberOfPlanets = 9; // Number of planets
         const orbitRadiusX = 30; // X radius for the orbit
-        const orbitRadiusZ = 15; // Z radius for the orbit
-        const orbitTiltAngle = 0; // Tilt angle for the orbit
+        const orbitRadiusZ = 25; // Z radius for the orbit
+        const orbitTiltAngle = -0.2; // Tilt angle for the orbit
         const orbitingSpheres = []; // Array to store the orbiting spheres (planets)
 
         // Create planets
@@ -73,8 +73,11 @@
             orbitingSpheres.push(planet); // Store the planet in the orbitingSpheres array
         }
 
+        debugSpace();
+
         // Set camera position and orientation
-        camera.position.set(80, 25, 0); // Position the camera
+        // camera.position.set(80, 25, 0); // Position the camera
+        camera.position.set(50, 50, 50); // Move the camera to a new position
         camera.lookAt(scene.position); // Make the camera look at the center of the scene
 
         // Raycaster and mouse setup for interaction
@@ -88,16 +91,7 @@
         const composer = new EffectComposer(renderer);
         composer.addPass(new RenderPass(scene, camera));
 
-        // BokehPass setup
-        const bokehPass = new BokehPass(scene, camera, {
-            focus: 55.0, // Adjusted to the distance of the closest planet
-            aperture: 0.003, // Smaller aperture to make the effect more subtle
-            maxblur: 0.009, // Increased max blur for a stronger effect on far-away planets
-    
-            width: window.innerWidth,
-            height: window.innerHeight
-        });
-        composer.addPass(bokehPass);
+        
 
         // Update mouse position function
         function updateMousePosition(event) {
@@ -192,6 +186,68 @@
 
         var sineWaveValues = [];
 
+        function debugSpace(){
+            // Axes Helper
+            const axesHelper = new THREE.AxesHelper(50); // The number 50 defines the size of the axes
+            scene.add(axesHelper);
+
+            // Grid Helper
+            const size = 100;
+            const divisions = 10;
+            const gridHelper = new THREE.GridHelper(size, divisions);
+            scene.add(gridHelper);
+
+            // Adding text to label axes, using the FontLoader and TextGeometry
+            const loader = new FontLoader();
+
+            // Load a font and create text
+            loader.load('three/fonts/helvetiker_regular.typeface.json', function (font) {
+                const textGeometryX = new TextGeometry('X', {
+                    font: font,
+                    size: 1,
+                    height: 0.1,
+                });
+                const textGeometryY = new TextGeometry('Y', {
+                    font: font,
+                    size: 1,
+                    height: 0.1,
+                });
+                const textGeometryZ = new TextGeometry('Z', {
+                    font: font,
+                    size: 1,
+                    height: 0.1,
+                });
+
+                const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+                const labelX = new THREE.Mesh(textGeometryX, textMaterial);
+                labelX.position.set(50, 0, 0); // Position at the end of the x-axis
+
+                const labelY = new THREE.Mesh(textGeometryY, textMaterial);
+                labelY.position.set(0, 50, 0); // Position at the end of the y-axis
+
+                const labelZ = new THREE.Mesh(textGeometryZ, textMaterial);
+                labelZ.position.set(0, 0, 50); // Position at the end of the z-axis
+
+                scene.add(labelX);
+                scene.add(labelY);
+                scene.add(labelZ);
+            });
+        }
+
+        function addBokeh(){
+            // BokehPass setup
+            const bokehPass = new BokehPass(scene, camera, {
+                focus: 55.0, // Adjusted to the distance of the closest planet
+                aperture: 0.003, // Smaller aperture to make the effect more subtle
+                maxblur: 0.009, // Increased max blur for a stronger effect on far-away planets
+        
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+            composer.addPass(bokehPass);
+        }
+    
         function toggleDirection(direction = null){
             if(direction){
                 rotationDirection = direction
@@ -240,6 +296,11 @@
                     planet.rotation.x += planet.userData.rotationVelocity.x;
                     planet.userData.rotationVelocity.x *= planet.userData.damping;
                     planet.userData.rotationVelocity.y *= planet.userData.damping;
+
+                    // Apply a continuous rotation to the camera around the Y axis
+                    // camera.position.x = 50 * Math.cos(timeVar);
+                    // camera.position.z = 50 * Math.cos(timeVar);
+                    camera.lookAt(scene.position); // Make sure the camera still looks at the scene center
                 });
             }
             composer.render();
