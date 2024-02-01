@@ -46,8 +46,9 @@
 
         // Variables for planets
         const numberOfPlanets = 9; // Number of planets
-        const orbitRadiusX = 30; // X radius for the orbit
-        const orbitRadiusZ = 25; // Z radius for the orbit
+        const orbitRadiusX = 40; // X radius for the orbit
+        const orbitRadiusZ = 20; // Z radius for the orbit
+        const orbitRadiusY = 20; // Y radius for the orbit
         const orbitTiltAngle = -0.2; // Tilt angle for the orbit
         const orbitingSpheres = []; // Array to store the orbiting spheres (planets)
 
@@ -73,11 +74,11 @@
             orbitingSpheres.push(planet); // Store the planet in the orbitingSpheres array
         }
 
-        debugSpace();
+        //Enable debug grid
+        // debugSpace();
 
         // Set camera position and orientation
-        // camera.position.set(80, 25, 0); // Position the camera
-        camera.position.set(50, 50, 50); // Move the camera to a new position
+        camera.position.set(90, 20, 0); // Position the camera
         camera.lookAt(scene.position); // Make the camera look at the center of the scene
 
         // Raycaster and mouse setup for interaction
@@ -91,7 +92,8 @@
         const composer = new EffectComposer(renderer);
         composer.addPass(new RenderPass(scene, camera));
 
-        
+        // Add bokeh effect
+        // addBokeh();
 
         // Update mouse position function
         function updateMousePosition(event) {
@@ -188,12 +190,12 @@
 
         function debugSpace(){
             // Axes Helper
-            const axesHelper = new THREE.AxesHelper(50); // The number 50 defines the size of the axes
+            const axesHelper = new THREE.AxesHelper(25); // The number 50 defines the size of the axes
             scene.add(axesHelper);
 
             // Grid Helper
             const size = 100;
-            const divisions = 10;
+            const divisions = 25;
             const gridHelper = new THREE.GridHelper(size, divisions);
             scene.add(gridHelper);
 
@@ -218,16 +220,16 @@
                     height: 0.1,
                 });
 
-                const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
 
                 const labelX = new THREE.Mesh(textGeometryX, textMaterial);
-                labelX.position.set(50, 0, 0); // Position at the end of the x-axis
+                labelX.position.set(25, 0, 0); // Position at the end of the x-axis
 
                 const labelY = new THREE.Mesh(textGeometryY, textMaterial);
-                labelY.position.set(0, 50, 0); // Position at the end of the y-axis
+                labelY.position.set(0, 25, 0); // Position at the end of the y-axis
 
                 const labelZ = new THREE.Mesh(textGeometryZ, textMaterial);
-                labelZ.position.set(0, 0, 50); // Position at the end of the z-axis
+                labelZ.position.set(0, 0, 25); // Position at the end of the z-axis
 
                 scene.add(labelX);
                 scene.add(labelY);
@@ -238,8 +240,8 @@
         function addBokeh(){
             // BokehPass setup
             const bokehPass = new BokehPass(scene, camera, {
-                focus: 55.0, // Adjusted to the distance of the closest planet
-                aperture: 0.003, // Smaller aperture to make the effect more subtle
+                focus: 50.0, // Adjusted to the distance of the closest planet
+                aperture: 0.0003, // Smaller aperture to make the effect more subtle
                 maxblur: 0.009, // Increased max blur for a stronger effect on far-away planets
         
                 width: window.innerWidth,
@@ -283,7 +285,7 @@
 
                     // Update planet position based on orbit
                     planet.position.x = orbitRadiusX * Math.cos(angle);
-                    planet.position.y = orbitRadiusZ * Math.sin(angle) * Math.sin(orbitTiltAngle);
+                    planet.position.y = orbitRadiusY * Math.sin(angle) * Math.sin(orbitTiltAngle);
                     planet.position.z = orbitRadiusZ * Math.sin(angle) * Math.cos(orbitTiltAngle);
 
                     // Calculate distance from camera to adjust scale
@@ -293,13 +295,10 @@
 
                     // Apply rotation velocity and damping to the planet
                     planet.rotation.y += planet.userData.rotationVelocity.y;
-                    planet.rotation.x += planet.userData.rotationVelocity.x;
+                    planet.rotation.x = 0.2;
                     planet.userData.rotationVelocity.x *= planet.userData.damping;
                     planet.userData.rotationVelocity.y *= planet.userData.damping;
 
-                    // Apply a continuous rotation to the camera around the Y axis
-                    // camera.position.x = 50 * Math.cos(timeVar);
-                    // camera.position.z = 50 * Math.cos(timeVar);
                     camera.lookAt(scene.position); // Make sure the camera still looks at the scene center
                 });
             }
