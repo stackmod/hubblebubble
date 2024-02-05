@@ -249,9 +249,18 @@
             const circleMaterial = new THREE.LineBasicMaterial({ 
                 color: 0xffffff,
                 linewidth: 2,
-                opacity: 0.05,
-                transparent: true
+                opacity: .005,
+                transparent: true,
+                opacity: 0.08,
             });
+
+            // var circleMaterial = new THREE.LineDashedMaterial({
+            //     color: 0xffffff,
+            //     dashSize: 1,
+            //     gapSize: 0.09,
+            //     opacity: .5,
+            //     transparent: .5
+            // });
 
             // Create a line using the geometry and material
             const circleLine = new THREE.Line(circleGeometry, circleMaterial);
