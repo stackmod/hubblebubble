@@ -38,7 +38,7 @@
 
         // Variable for time calculation
         var timeVar = Date.now() * 0.0001;
-        var rotationDirection = "acl";
+        var rotationDirection = "cl";
 
         // Create a central sphere to represent the Sun
         const sunGeometry = new THREE.SphereGeometry(4, 32, 32); // Define the geometry for the sphere
@@ -49,13 +49,15 @@
 
         // Variables for planets
         const numberOfPlanets = 9; // Number of planets
-        const orbitRadiusX = 40; // X radius for the orbit
+        const orbitRadiusX = 35; // X radius for the orbit
         const orbitRadiusZ = 20; // Z radius for the orbit
         const orbitRadiusY = 20; // Y radius for the orbit
         const orbitTiltAngle = -0.2; // Tilt angle for the orbit
         const orbitingSpheres = []; // Array to store the orbiting spheres (planets)
 
         addPlanets();
+
+        drawCircle();
 
         //Enable debug grid
         // debugSpace();
@@ -76,11 +78,13 @@
         // OrbitControls setup
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableZoom = false; // Disable zoom
-        controls.enableRotate = true; // Disable rotation
+        controls.enableRotate = false; // Disable rotation
         controls.enablePan = false; // Enable panning
         controls.screenSpacePanning = true; // Limit panning to vertical direction
-        // controls.panSpeed = 0.00001; // Adjust the speed of panning
-        // controls.keyPanSpeed = 7.0; // Speed of panning via arrow keys
+        controls.panSpeed = 0.00001; // Adjust the speed of panning
+        controls.keyPanSpeed = 7.0; // Speed of panning via arrow keys
+        controls.minPolarAngle = Math.PI / 4; // Limit the down rotation to 45 degrees
+        controls.maxPolarAngle = 3 * Math.PI / 4; // Limit the up rotation to 135 degrees
 
         // Default camera position and orientation
         const defaultPosition = camera.position.clone();
@@ -184,7 +188,7 @@
             // Create planets
             for (let i = 0; i < numberOfPlanets; i++) {
                 const planetGeometry = new THREE.SphereGeometry(0.9, 32, 32); // Define geometry for each planet
-                const planetTexture = new THREE.TextureLoader().load('img/planets/'+ i + '.png'); // Load texture for each planet
+                const planetTexture = new THREE.TextureLoader().load('img/planets2/'+ i + '.png'); // Load texture for each planet
                 const planetMaterial = new THREE.MeshStandardMaterial({ map: planetTexture }); // Create material with texture
                 const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
 
@@ -222,6 +226,38 @@
             scene.add(spotLight);
         }
 
+        function drawCircle(){
+            const circleSegments = 250; // Number of segments to make the circle smooth
+            const orbitTiltAngle = 6;
+            // Generate points for the circle
+            const circlePoints = [];
+            for (let i = 0; i <= circleSegments; i++) {
+                const angle = (i / circleSegments) * Math.PI * 2;
+
+                // Update planet position based on orbit
+                const x = orbitRadiusX * Math.cos((2 * Math.PI / circleSegments) * i) + 0.55;
+                const y = orbitRadiusX * Math.sin((2 * Math.PI / circleSegments) * i) * Math.sin(orbitTiltAngle);
+                const z = orbitRadiusZ * Math.sin((2 * Math.PI / circleSegments) * i) * Math.cos(orbitTiltAngle);
+
+                circlePoints.push(new THREE.Vector3(x, y, z));
+            }
+
+            // Create the geometry from the points
+            const circleGeometry = new THREE.BufferGeometry().setFromPoints(circlePoints);
+
+            // Create a material for the line
+            const circleMaterial = new THREE.LineBasicMaterial({ color: 0xd7520e });
+
+            // Create a line using the geometry and material
+            const circleLine = new THREE.LineLoop(circleGeometry, circleMaterial);
+
+            // Apply tilt to match the planets' orbit tilt
+            circleLine.rotation.x = orbitTiltAngle;
+
+            // Add the line to the scene
+            scene.add(circleLine);
+
+        }
 
         // Add event listeners for mouse and touch events
         document.addEventListener('mousedown', onMouseDown, false);
