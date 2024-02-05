@@ -26,6 +26,8 @@
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 
+        import { Main } from './js/main.js';
+
 
         // Scene setup
         const scene = new THREE.Scene(); // Create a new scene
@@ -53,27 +55,7 @@
         const orbitTiltAngle = -0.2; // Tilt angle for the orbit
         const orbitingSpheres = []; // Array to store the orbiting spheres (planets)
 
-        // Create planets
-        for (let i = 0; i < numberOfPlanets; i++) {
-            const planetGeometry = new THREE.SphereGeometry(0.9, 32, 32); // Define geometry for each planet
-            const planetTexture = new THREE.TextureLoader().load('img/planets/'+ i + '.png'); // Load texture for each planet
-            const planetMaterial = new THREE.MeshStandardMaterial({ map: planetTexture }); // Create material with texture
-            const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
-
-            // Position each planet on its orbit
-            planet.position.x = orbitRadiusX * Math.cos((2 * Math.PI / numberOfPlanets) * i);
-            planet.position.y = orbitRadiusZ * Math.sin((2 * Math.PI / numberOfPlanets) * i) * Math.sin(orbitTiltAngle);
-            planet.position.z = orbitRadiusZ * Math.sin((2 * Math.PI / numberOfPlanets) * i) * Math.cos(orbitTiltAngle);
-
-            // Set rotation velocity and damping for each planet
-            planet.userData = { 
-                rotationVelocity: { x: 0, y: 0 },
-                damping: 0.95
-            };
-
-            scene.add(planet); // Add each planet to the scene
-            orbitingSpheres.push(planet); // Store the planet in the orbitingSpheres array
-        }
+        addPlanets();
 
         //Enable debug grid
         // debugSpace();
@@ -91,14 +73,10 @@
         let selectedPlanet = null; // Store the currently selected planet
         let previousMousePosition = { x: 0, y: 0 }; // Store the previous mouse position
 
-        // EffectComposer setup
-        // const composer = new EffectComposer(renderer);
-        // composer.addPass(new RenderPass(scene, camera));
-
         // OrbitControls setup
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableZoom = false; // Disable zoom
-        controls.enableRotate = false; // Disable rotation
+        controls.enableRotate = true; // Disable rotation
         controls.enablePan = false; // Enable panning
         controls.screenSpacePanning = true; // Limit panning to vertical direction
         // controls.panSpeed = 0.00001; // Adjust the speed of panning
@@ -139,9 +117,6 @@
 
         // Event listener for when user stops interacting
         controls.addEventListener('end', startTransitionBack);
-
-        // Add bokeh effect
-        // addBokeh();
 
         // Update mouse position function
         function updateMousePosition(event) {
@@ -205,6 +180,30 @@
             isDragging = false; // Disable dragging
         }
 
+        function addPlanets(){
+            // Create planets
+            for (let i = 0; i < numberOfPlanets; i++) {
+                const planetGeometry = new THREE.SphereGeometry(0.9, 32, 32); // Define geometry for each planet
+                const planetTexture = new THREE.TextureLoader().load('img/planets/'+ i + '.png'); // Load texture for each planet
+                const planetMaterial = new THREE.MeshStandardMaterial({ map: planetTexture }); // Create material with texture
+                const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
+
+                // Position each planet on its orbit
+                planet.position.x = orbitRadiusX * Math.cos((2 * Math.PI / numberOfPlanets) * i);
+                planet.position.y = orbitRadiusZ * Math.sin((2 * Math.PI / numberOfPlanets) * i) * Math.sin(orbitTiltAngle);
+                planet.position.z = orbitRadiusZ * Math.sin((2 * Math.PI / numberOfPlanets) * i) * Math.cos(orbitTiltAngle);
+
+                // Set rotation velocity and damping for each planet
+                planet.userData = { 
+                    rotationVelocity: { x: 0, y: 0 },
+                    damping: 0.95
+                };
+
+                scene.add(planet); // Add each planet to the scene
+                orbitingSpheres.push(planet); // Store the planet in the orbitingSpheres array
+            }
+        }
+
         function addLights(){
             // // Ambient light
             // const ambientLight = new THREE.AmbientLight(0xffffff, 0.09); // soft white light
@@ -265,19 +264,6 @@
             const divisions = 25;
             const gridHelper = new THREE.GridHelper(size, divisions);
             scene.add(gridHelper);
-        }
-
-        function addBokeh(){
-            // BokehPass setup
-            const bokehPass = new BokehPass(scene, camera, {
-                focus: 50.0, // Adjusted to the distance of the closest planet
-                aperture: 0.0003, // Smaller aperture to make the effect more subtle
-                maxblur: 0.009, // Increased max blur for a stronger effect on far-away planets
-        
-                width: window.innerWidth,
-                height: window.innerHeight
-            });
-            composer.addPass(bokehPass);
         }
     
         function toggleDirection(direction = null){
