@@ -26,9 +26,6 @@
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 
-        import { Main } from './js/main.js';
-
-
         // Scene setup
         const scene = new THREE.Scene(); // Create a new scene
         const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000); // Create a perspective camera
@@ -135,7 +132,7 @@
             raycaster.setFromCamera(mouse, camera); // Set the raycaster from the camera and mouse position
             const intersects = raycaster.intersectObjects(orbitingSpheres); // Detect intersection with planets
 
-            if (intersects.length > 0) {
+            if (intersects.length == 0) {
                 isDragging = true; // Enable dragging
                 selectedPlanet = intersects[0].object; // Set the selected planet
                 previousMousePosition.x = mouse.x; // Update the previous mouse position
