@@ -227,7 +227,7 @@
         }
 
         function drawCircle(){
-            const circleSegments = 250; // Number of segments to make the circle smooth
+            const circleSegments = 1000; // Number of segments to make the circle smooth
             const orbitTiltAngle = 6;
             // Generate points for the circle
             const circlePoints = [];
@@ -247,6 +247,7 @@
 
             // Create a material for the line
             const circleMaterial = new THREE.LineBasicMaterial({ 
+<<<<<<< HEAD
                 color: 0xe63900,
                 opacity: .005,
                 transparent: .5,
@@ -260,6 +261,13 @@
             //     opacity: .5,
             //     transparent: .5
             // });
+=======
+                color: 0xffffff,
+                linewidth: 2,
+                opacity: 0.05,
+                transparent: true
+            });
+>>>>>>> master
 
             // Create a line using the geometry and material
             const circleLine = new THREE.Line(circleGeometry, circleMaterial);
@@ -304,9 +312,12 @@
 
         var sineWaveValues = [];
 
+        /*
+            Call this function to display grid showing x,y and z axis. 
+        */
         function debugSpace(){
             // Axes Helper
-            const axesHelper = new THREE.AxesHelper(25); // The number 50 defines the size of the axes
+            const axesHelper = new THREE.AxesHelper(25); // The number 25 defines the size of the axes
             scene.add(axesHelper);
 
             // Grid Helper
