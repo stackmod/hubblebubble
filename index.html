@@ -209,8 +209,8 @@
         }
 
         function addLights(){
-            // // Ambient light
-            // const ambientLight = new THREE.AmbientLight(0xffffff, 0.09); // soft white light
+            // Ambient light
+            // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // soft white light
             // scene.add(ambientLight);
 
             // // Point Lighting
@@ -221,7 +221,7 @@
             // // Spotlight
             const spotLight = new THREE.SpotLight(0xffffff, 6000);
             spotLight.position.set(90, 20, 0); // Position the light above the scene
-            spotLight.distance = 1000; // Light affects objects within 100 units
+            spotLight.distance = 500; // Light affects objects within 100 units
             spotLight.lookAt(sun);
             scene.add(spotLight);
         }
@@ -246,10 +246,24 @@
             const circleGeometry = new THREE.BufferGeometry().setFromPoints(circlePoints);
 
             // Create a material for the line
-            const circleMaterial = new THREE.LineBasicMaterial({ color: 0xd7520e });
+            const circleMaterial = new THREE.LineBasicMaterial({ 
+                color: 0xe63900,
+                opacity: .005,
+                transparent: .5,
+                    opacity: .5,
+            });
+
+            // var circleMaterial = new THREE.LineDashedMaterial({
+            //     color: 0xffffff,
+            //     dashSize: 1,
+            //     gapSize: 0.09,
+            //     opacity: .5,
+            //     transparent: .5
+            // });
 
             // Create a line using the geometry and material
-            const circleLine = new THREE.LineLoop(circleGeometry, circleMaterial);
+            const circleLine = new THREE.Line(circleGeometry, circleMaterial);
+            circleLine.computeLineDistances();
 
             // Apply tilt to match the planets' orbit tilt
             circleLine.rotation.x = orbitTiltAngle;
