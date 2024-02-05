@@ -83,6 +83,23 @@
         controls.minPolarAngle = Math.PI / 4; // Limit the down rotation to 45 degrees
         controls.maxPolarAngle = 3 * Math.PI / 4; // Limit the up rotation to 135 degrees
 
+        let closestPlanets = []; // This will store the three closest planets
+        function updateClosestPlanets() {
+            // Calculate distances for each planet and sort them
+            const distances = orbitingSpheres.map(planet => {
+                return {
+                    planet: planet,
+                    distance: planet.position.distanceTo(camera.position),
+                };
+            });
+
+            // Sort planets by distance
+            distances.sort((a, b) => a.distance - b.distance);
+
+            // Keep only the three closest planets
+            closestPlanets = distances.slice(0, 3).map(item => item.planet);
+        }
+
         // Default camera position and orientation
         const defaultPosition = camera.position.clone();
         const defaultQuaternion = camera.quaternion.clone();
@@ -132,12 +149,21 @@
             raycaster.setFromCamera(mouse, camera); // Set the raycaster from the camera and mouse position
             const intersects = raycaster.intersectObjects(orbitingSpheres); // Detect intersection with planets
 
-            if (intersects.length == 0) {
+            if (intersects.length > 0 && intersects[0].object.userData.url) {
+                const clickedPlanet = intersects[0].object;
+               
+                if (closestPlanets.includes(clickedPlanet) && clickedPlanet.userData.url) { // Check if the clicked planet is one of the closest
+                    window.open(clickedPlanet.userData.url, '_blank');// If a planet was clicked and it has a URL, open it in a new tab
+                }
+            } else if (intersects.length == 0) {
                 isDragging = true; // Enable dragging
                 selectedPlanet = intersects[0].object; // Set the selected planet
                 previousMousePosition.x = mouse.x; // Update the previous mouse position
                 previousMousePosition.y = mouse.y;
             }
+
+            
+        
         }
 
         // Function to handle mouse move event
@@ -184,9 +210,16 @@
         function addPlanets(){
             // Example URLs for demonstration
             const planetUrls = [
+                'https://example.com/planet0',
                 'https://example.com/planet1',
                 'https://example.com/planet2',
-                // Add more URLs as needed
+                'https://example.com/planet3',
+                'https://example.com/planet4',
+                'https://example.com/planet5',
+                'https://example.com/planet6',
+                'https://example.com/planet7',
+                'https://example.com/planet8',
+                'https://example.com/planet9'
             ];
 
         
@@ -197,9 +230,6 @@
                 const planetMaterial = new THREE.MeshStandardMaterial({ map: planetTexture }); // Create material with texture
                 const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
 
-                // Assign a URL to each planet
-                // planet.userData.url = planetUrls[i % planetUrls.length]; // Use modulo to repeat URLs if there are more planets than URLs
-
                 // Position each planet on its orbit
                 planet.position.x = orbitRadiusX * Math.cos((2 * Math.PI / numberOfPlanets) * i);
                 planet.position.y = orbitRadiusZ * Math.sin((2 * Math.PI / numberOfPlanets) * i) * Math.sin(orbitTiltAngle);
@@ -208,7 +238,8 @@
                 // Set rotation velocity and damping for each planet
                 planet.userData = { 
                     rotationVelocity: { x: 0, y: 0 },
-                    damping: 0.95
+                    damping: 0.95,
+                    url : planetUrls[i % planetUrls.length] // Use modulo to repeat URLs if there are more planets than URLs
                 };
 
                 scene.add(planet); // Add each planet to the scene
@@ -382,6 +413,7 @@
             
             controls.update(); // Only required if damping is enabled, or if auto-rotate is enabled
             smoothTransitionToDefault(); // Add this line to perform the smooth transition when needed
+            updateClosestPlanets(); // Ensure this is called to continuously update the closest planets
 
             // composer.render();
             renderer.render(scene, camera); // Render the scene
