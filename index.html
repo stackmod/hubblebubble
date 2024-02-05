@@ -182,12 +182,23 @@
         }
 
         function addPlanets(){
+            // Example URLs for demonstration
+            const planetUrls = [
+                'https://example.com/planet1',
+                'https://example.com/planet2',
+                // Add more URLs as needed
+            ];
+
+        
             // Create planets
             for (let i = 0; i < numberOfPlanets; i++) {
                 const planetGeometry = new THREE.SphereGeometry(0.9, 32, 32); // Define geometry for each planet
                 const planetTexture = new THREE.TextureLoader().load('img/planets2/'+ i + '.png'); // Load texture for each planet
                 const planetMaterial = new THREE.MeshStandardMaterial({ map: planetTexture }); // Create material with texture
                 const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
+
+                // Assign a URL to each planet
+                // planet.userData.url = planetUrls[i % planetUrls.length]; // Use modulo to repeat URLs if there are more planets than URLs
 
                 // Position each planet on its orbit
                 planet.position.x = orbitRadiusX * Math.cos((2 * Math.PI / numberOfPlanets) * i);
