@@ -146,6 +146,7 @@
                 if (closestPlanets.includes(clickedPlanet) && clickedPlanet.userData.url) { // Check if the clicked planet is one of the closest
                     const clickedPlanet = intersects[0].object;
                     isTouching = true;
+                    // window.open(planet.userData.url, '_blank');// If a planet was clicked and it has a URL, open it in a new tab
                     startVibration(clickedPlanet);// Trigger vibration for the clicked planet
                 }
                 
