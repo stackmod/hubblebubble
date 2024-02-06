@@ -68,6 +68,7 @@
         const raycaster = new THREE.Raycaster(); // Create a raycaster for mouse interaction
         const mouse = new THREE.Vector2(); // Vector to store mouse position
         let isDragging = false; // Flag to check if dragging is occurring
+        let isTouching = false; // Flag to check if touching is occurring
         let selectedPlanet = null; // Store the currently selected planet
         let previousMousePosition = { x: 0, y: 0 }; // Store the previous mouse position
 
@@ -143,8 +144,9 @@
                 const clickedPlanet = intersects[0].object;
                
                 if (closestPlanets.includes(clickedPlanet) && clickedPlanet.userData.url) { // Check if the clicked planet is one of the closest
-                    window.open(clickedPlanet.userData.url, '_blank');// If a planet was clicked and it has a URL, open it in a new tab
+                    // window.open(clickedPlanet.userData.url, '_blank');// If a planet was clicked and it has a URL, open it in a new tab
                 }
+                isTouching = true;
             } else if (intersects.length == 0) {
                 isDragging = true; // Enable dragging
                 previousMousePosition.x = mouse.x; // Update the previous mouse position
@@ -156,8 +158,17 @@
         function onMouseMove(event) {
             event.preventDefault(); // Prevent default behavior of the event
 
-            if (!isDragging) return; // Exit if not dragging or no planet is selected
+            if (!isDragging && !isTouching) return; // Exit if not dragging or no planet is selected
             updateMousePosition(event); // Update mouse position
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(orbitingSpheres, true); // Ensure true for recursive search if your planets are nested in other objects
+
+            if (intersects.length > 0) {
+                const clickedPlanet = intersects[0].object;
+                // Trigger vibration for the clicked planet
+                startVibration(clickedPlanet);
+            }
 
             let deltaX, deltaY;
             if (event.changedTouches) {
@@ -191,6 +202,33 @@
         // Function to handle mouse up event
         function onMouseUp() {
             isDragging = false; // Disable dragging
+            // isTouching = false; // Dsiable touching, used for planets
+        }
+
+        function startVibration(planet) {
+            const originalPosition = planet.position.clone(); // Store the original position
+            const duration = 2000; // Duration of the vibration in milliseconds
+            const intensity = 0.05; // Intensity of the vibration
+
+            const startTime = Date.now();
+
+            function vibrate() {
+                const elapsedTime = Date.now() - startTime;
+                if (elapsedTime < duration) {
+                    // Apply random vibration by modifying the planet's position
+                    planet.position.x = originalPosition.x + (Math.random() * 2 - 1) * intensity;
+                    planet.position.y = originalPosition.y + (Math.random() * 2 - 1) * intensity;
+                    planet.position.z = originalPosition.z + (Math.random() * 2 - 1) * intensity;
+
+                    requestAnimationFrame(vibrate); // Continue the vibration
+                } else {
+                    // Reset the planet's position once the vibration duration has elapsed
+                    planet.position.copy(originalPosition);
+                    isTouching = false; 
+                }
+            }
+
+            vibrate(); // Start the vibration
         }
 
         function addPlanets(){
@@ -244,7 +282,7 @@
             // // Spotlight
             const spotLight = new THREE.SpotLight(0xffffff, 6000);
             spotLight.position.set(90, 20, 0); // Position the light above the scene
-            spotLight.distance = 150; // Light affects objects within 100 units
+            spotLight.distance = 150; // Light affects objects within 150 units
             spotLight.lookAt(sun);
             scene.add(spotLight);
         }
@@ -308,22 +346,13 @@
         function generateSineWave(maxValue, steps, decimalPlaces = 2) {
             let wave = [];
             for (let i = 0; i < steps; i++) {
-                // Scale 'i' to fit the 0 to PI range (half sine wave)
-                let x = (Math.PI / (steps - 1)) * i;
-
-                // Calculate the sine value and shift it to oscillate between 0 and 1
-                let sineValue = (Math.sin(x) + 1) / 2;
-
-                // Scale the sine value to be between 0 and maxValue
-                let scaledValue = sineValue * maxValue;
-
-                // Round to the specified number of decimal places and convert back to number
-                scaledValue = parseFloat(scaledValue.toFixed(decimalPlaces));
-
-                // Append the scaled value to the array
-                wave.push(scaledValue);
+                let x = (Math.PI / (steps - 1)) * i; // Scale 'i' to fit the 0 to PI range (half sine wave)
+                let sineValue = (Math.sin(x) + 1) / 2; // Calculate the sine value and shift it to oscillate between 0 and 1
+                let scaledValue = sineValue * maxValue; // Scale the sine value to be between 0 and maxValue
+                scaledValue = parseFloat(scaledValue.toFixed(decimalPlaces)); // Round to the specified number of decimal places and convert back to number
+                wave.push(scaledValue); // Append the scaled value to the array
             }
-            return wave.reverse();
+            return wave;
         }
 
         var sineWaveValues = [];
@@ -353,7 +382,7 @@
                     rotationDirection = "cl";
                 }
             }
-            sineWaveValues = generateSineWave(0.010, 1000, 19);
+            sineWaveValues = generateSineWave(0.010, 500, 5);
         }
 
         // Animation loop
@@ -361,7 +390,7 @@
             requestAnimationFrame(animate); // Request the next frame for animation
 
             // Check if not dragging
-            if(isDragging == false){
+            if(isDragging == false && isTouching == false){
                 orbitingSpheres.forEach((planet) => {
                     // Time-based animation for planet movement
                     if(rotationDirection == "cl"){
