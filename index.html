@@ -144,9 +144,11 @@
                 const clickedPlanet = intersects[0].object;
                
                 if (closestPlanets.includes(clickedPlanet) && clickedPlanet.userData.url) { // Check if the clicked planet is one of the closest
-                    // window.open(clickedPlanet.userData.url, '_blank');// If a planet was clicked and it has a URL, open it in a new tab
+                    const clickedPlanet = intersects[0].object;
+                    isTouching = true;
+                    startVibration(clickedPlanet);// Trigger vibration for the clicked planet
                 }
-                isTouching = true;
+                
             } else if (intersects.length == 0) {
                 isDragging = true; // Enable dragging
                 previousMousePosition.x = mouse.x; // Update the previous mouse position
@@ -158,17 +160,8 @@
         function onMouseMove(event) {
             event.preventDefault(); // Prevent default behavior of the event
 
-            if (!isDragging && !isTouching) return; // Exit if not dragging or no planet is selected
+            if (!isDragging) return; // Exit if not dragging or no planet is selected
             updateMousePosition(event); // Update mouse position
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(orbitingSpheres, true); // Ensure true for recursive search if your planets are nested in other objects
-
-            if (intersects.length > 0) {
-                const clickedPlanet = intersects[0].object;
-                // Trigger vibration for the clicked planet
-                startVibration(clickedPlanet);
-            }
 
             let deltaX, deltaY;
             if (event.changedTouches) {
@@ -185,10 +178,6 @@
                 toggleDirection("cl");
             }
 
-            // Adjust planet rotation velocity based on drag
-            // selectedPlanet.userData.rotationVelocity.y += deltaX * 0.0005; // Adjust Y velocity
-            // selectedPlanet.userData.rotationVelocity.x += deltaY * 0.0005; // Adjust X velocity
-
             // Update previous mouse position
             if (event.changedTouches) {
                 previousMousePosition.x = event.changedTouches[0].clientX;
@@ -202,12 +191,11 @@
         // Function to handle mouse up event
         function onMouseUp() {
             isDragging = false; // Disable dragging
-            // isTouching = false; // Dsiable touching, used for planets
         }
 
         function startVibration(planet) {
             const originalPosition = planet.position.clone(); // Store the original position
-            const duration = 2000; // Duration of the vibration in milliseconds
+            const duration = 500; // Duration of the vibration in milliseconds
             const intensity = 0.05; // Intensity of the vibration
 
             const startTime = Date.now();
@@ -222,9 +210,9 @@
 
                     requestAnimationFrame(vibrate); // Continue the vibration
                 } else {
-                    // Reset the planet's position once the vibration duration has elapsed
-                    planet.position.copy(originalPosition);
+                    planet.position.copy(originalPosition); // Reset the planet's position once the vibration duration has elapsed
                     isTouching = false; 
+                    window.open(planet.userData.url, '_blank');// If a planet was clicked and it has a URL, open it in a new tab
                 }
             }
 
@@ -274,7 +262,7 @@
             // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // soft white light
             // scene.add(ambientLight);
 
-            // // Point Lighting
+            // Point Lighting
             // const light = new THREE.PointLight(0xffffff, 5000, 95);
             // light.position.set(90, 0, 0);
             // scene.add(light);
@@ -315,24 +303,13 @@
                 opacity: 0.08,
             });
 
-            // var circleMaterial = new THREE.LineDashedMaterial({
-            //     color: 0xffffff,
-            //     dashSize: 1,
-            //     gapSize: 0.09,
-            //     opacity: .5,
-            //     transparent: .5
-            // });
-
             // Create a line using the geometry and material
             const circleLine = new THREE.Line(circleGeometry, circleMaterial);
             circleLine.computeLineDistances();
+            
+            circleLine.rotation.x = orbitTiltAngle; // Apply tilt to match the planets' orbit tilt
 
-            // Apply tilt to match the planets' orbit tilt
-            circleLine.rotation.x = orbitTiltAngle;
-
-            // Add the line to the scene
-            scene.add(circleLine);
-
+            scene.add(circleLine); // Add the line to the scene
         }
 
         // Add event listeners for mouse and touch events
@@ -426,7 +403,9 @@
             }
             
             controls.update(); // Only required if damping is enabled, or if auto-rotate is enabled
-            smoothTransitionToDefault(); // Add this line to perform the smooth transition when needed
+            if(isDragging){
+                smoothTransitionToDefault(); // Add this line to perform the smooth transition when needed
+            }
             updateClosestPlanets(); // Ensure this is called to continuously update the closest planets
 
             // composer.render();
