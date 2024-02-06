@@ -28,7 +28,7 @@
 
         // Scene setup
         const scene = new THREE.Scene(); // Create a new scene
-        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000); // Create a perspective camera
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000); // Create a perspective camera
         const renderer = new THREE.WebGLRenderer(); // Create a WebGL renderer
         renderer.setSize(window.innerWidth, window.innerHeight); // Set the size of the renderer
         document.body.appendChild(renderer.domElement); // Append the renderer to the document body
@@ -92,12 +92,8 @@
                     distance: planet.position.distanceTo(camera.position),
                 };
             });
-
-            // Sort planets by distance
-            distances.sort((a, b) => a.distance - b.distance);
-
-            // Keep only the three closest planets
-            closestPlanets = distances.slice(0, 3).map(item => item.planet);
+            distances.sort((a, b) => a.distance - b.distance);// Sort planets by distance
+            closestPlanets = distances.slice(0, 3).map(item => item.planet);// Keep only the three closest planets
         }
 
         // Default camera position and orientation
@@ -118,12 +114,8 @@
             if (!transitioningBack) return;
 
             var quaternion = new THREE.Quaternion();
-
-            // Smoothly interpolate position and quaternion
-            camera.position.lerp(defaultPosition, transitionSpeed);
-
-            // Interpolate rotation (quaternion)
-            quaternion.slerp(camera.quaternion, defaultQuaternion, camera.quaternion, transitionSpeed);
+            camera.position.lerp(defaultPosition, transitionSpeed);// Smoothly interpolate position and quaternion
+            quaternion.slerp(camera.quaternion, defaultQuaternion, camera.quaternion, transitionSpeed);// Interpolate rotation (quaternion)
 
             // Check if the position and rotation are close enough to the defaults to stop the transition
             if (camera.position.distanceTo(defaultPosition) < 0.01 && camera.quaternion.angleTo(defaultQuaternion) < 0.01) {
@@ -132,9 +124,8 @@
                 camera.quaternion.copy(defaultQuaternion); // Ensure exact default rotation
             }
         }
-
-        // Event listener for when user stops interacting
-        controls.addEventListener('end', startTransitionBack);
+        
+        controls.addEventListener('end', startTransitionBack); // Event listener for when user stops interacting
 
         // Update mouse position function
         function updateMousePosition(event) {
@@ -161,9 +152,6 @@
                 previousMousePosition.x = mouse.x; // Update the previous mouse position
                 previousMousePosition.y = mouse.y;
             }
-
-            
-        
         }
 
         // Function to handle mouse move event
@@ -222,11 +210,10 @@
                 'https://example.com/planet9'
             ];
 
-        
             // Create planets
             for (let i = 0; i < numberOfPlanets; i++) {
                 const planetGeometry = new THREE.SphereGeometry(0.9, 32, 32); // Define geometry for each planet
-                const planetTexture = new THREE.TextureLoader().load('img/planets2/'+ i + '.png'); // Load texture for each planet
+                const planetTexture = new THREE.TextureLoader().load('img/planets/'+ i + '.png'); // Load texture for each planet
                 const planetMaterial = new THREE.MeshStandardMaterial({ map: planetTexture }); // Create material with texture
                 const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
 
