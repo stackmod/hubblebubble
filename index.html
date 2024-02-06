@@ -198,22 +198,21 @@
         function addPlanets(){
             // Example URLs for demonstration
             const planetUrls = [
-                'https://example.com/planet0',
-                'https://example.com/planet1',
-                'https://example.com/planet2',
-                'https://example.com/planet3',
-                'https://example.com/planet4',
-                'https://example.com/planet5',
-                'https://example.com/planet6',
-                'https://example.com/planet7',
-                'https://example.com/planet8',
-                'https://example.com/planet9'
+                'https://example.com/america',
+                'https://example.com/canada',
+                'https://example.com/india',
+                'https://example.com/iran',
+                'https://example.com/japan',
+                'https://example.com/uk',
+                'https://example.com/finland',
+                'https://example.com/italy',
+                'https://example.com/korea'
             ];
 
             // Create planets
             for (let i = 0; i < numberOfPlanets; i++) {
                 const planetGeometry = new THREE.SphereGeometry(0.9, 32, 32); // Define geometry for each planet
-                const planetTexture = new THREE.TextureLoader().load('img/planets/'+ i + '.png'); // Load texture for each planet
+                const planetTexture = new THREE.TextureLoader().load('img/planets2/'+ i + '.png'); // Load texture for each planet
                 const planetMaterial = new THREE.MeshStandardMaterial({ map: planetTexture }); // Create material with texture
                 const planet = new THREE.Mesh(planetGeometry, planetMaterial); // Create a mesh for each planet
 
